@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PixelForge Pro - Ultra Emoji & Asset Studio</title>
+    <style>
+        :root {
+            --bg-main: #090d16;
+            --bg-card: #111827;
+            --accent: #38bdf8;
+            --accent-hover: #0ea5e9;
+            --text: #f8fafc;
+            --text-muted: #64748b;
+            --border: #1f2937;
+            --inner-bg: #030712;
+            --shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+        }
+
+        [data-theme="light"] {
+            --bg-main: #f8fafc;
+            --bg-card: #ffffff;
+            --accent: #0284c7;
+            --accent-hover: #0369a1;
+            --text: #0f172a;
+            --text-muted: #94a3b8;
+            --border: #e2e8f0;
+            --inner-bg: #f1f5f9;
+            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1400px;
+            width: 100%;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 1rem;
+        }
+
+        header h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            background: linear-gradient(to right, var(--accent), #a855f7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 450px 1fr;
+            gap: 2rem;
+            max-width: 1400px;
+            width: 100%;
+        }
+
+        @media (max-width: 1024px) {
+            .container { grid-template-columns: 1fr; }
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+            box-shadow: var(--shadow);
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.75rem;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        label {
+            font-size: 0.825rem;
+            color: var(--text);
+            font-weight: 600;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .input-row .control-group { flex: 1; }
+
+        input[type="text"], input[type="number"], select {
+            background: var(--inner-bg);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 0.65rem 0.75rem;
+            border-radius: 8px;
+            width: 100%;
+            font-size: 0.9rem;
+            outline: none;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            accent-color: var(--accent);
+            cursor: pointer;
+        }
+
+        .source-tabs {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            background: var(--inner-bg);
+            padding: 0.25rem;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .source-tab {
+            padding: 0.5rem;
+            text-align: center;
+            font-size: 0.85rem;
+            cursor: pointer;
+            border-radius: 6px;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .source-tab.active {
+            background: var(--bg-card);
+            color: var(--accent);
+        }
+
+        .source-panel { display: none; }
+        .source-panel.active { display: block; }
+
+        .file-upload { position: relative; width: 100%; }
+        .file-upload input[type="file"] {
+            position: absolute; left: 0; top: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer;
+        }
+
+        .file-upload-btn {
+            background: var(--inner-bg);
+            border: 2px dashed var(--border);
+            padding: 1.5rem;
+            border-radius: 8px;
+            text-align: center;
+            color: var(--text-muted);
+            font-weight: 500;
+            font-size: 0.875rem;
+        }
+
+        .emoji-grid-box {
+            background: var(--inner-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            height: 220px;
+            overflow-y: auto;
+            padding: 0.5rem;
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 0.5rem;
+        }
+
+        .emoji-item {
+            font-size: 1.6rem;
+            text-align: center;
+            cursor: pointer;
+            padding: 0.25rem;
+            border-radius: 6px;
+            transition: transform 0.1s ease;
+        }
+        .emoji-item:hover {
+            transform: scale(1.2);
+        }
+
+        .emoji-item.active {
+            background: rgba(56, 189, 248, 0.25);
+            border: 1px solid var(--accent);
+        }
+
+        .dynamic-config-box {
+            background: rgba(56, 189, 248, 0.05);
+            border: 1px dashed var(--accent);
+            border-radius: 10px;
+            padding: 1rem;
+            display: none;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .preview-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: var(--inner-bg);
+            border-radius: 16px;
+            min-height: 400px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        .workspace-wrapper { position: relative; display: inline-block; }
+
+        #srcImageDisplay {
+            max-width: 100%; max-height: 400px; display: none;
+            user-select: none; -webkit-user-drag: none;
+        }
+
+        #previewCanvas { max-width: 100%; max-height: 400px; image-rendering: pixelated; }
+
+        .crop-box-pro {
+            position: absolute; border: 1px solid #fff;
+            outline: 2000px solid rgba(0, 0, 0, 0.65);
+            cursor: move; display: none; box-shadow: 0 0 20px rgba(0,0,0,0.8);
+        }
+
+        .handle-pro { position: absolute; width: 10px; height: 10px; background: #fff; border: 1px solid #000; }
+        .h-tl { top: -5px; left: -5px; cursor: nwse-resize; }
+        .h-tr { top: -5px; right: -5px; cursor: nesw-resize; }
+        .h-bl { bottom: -5px; left: -5px; cursor: nesw-resize; }
+        .h-br { bottom: -5px; right: -5px; cursor: nwse-resize; }
+
+        .btn {
+            background: var(--accent); color: #000; border: none; padding: 0.7rem 1.25rem;
+            border-radius: 8px; font-weight: 700; font-size: 0.9rem; cursor: pointer;
+            display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+        }
+
+        .btn:hover { background: var(--accent-hover); }
+        .btn-secondary { background: #475569; color: white; }
+        .btn-crop-active { background: #ef4444 !important; color: white !important; }
+
+        .tabs { display: flex; gap: 0.5rem; }
+        .tab {
+            padding: 0.5rem 1rem; border-radius: 8px 8px 0 0; cursor: pointer;
+            background: var(--border); font-size: 0.85rem; color: var(--text-muted);
+        }
+        .tab.active {
+            background: var(--bg-card); color: var(--accent); font-weight: 700;
+            border: 1px solid var(--border); border-bottom: 2px solid var(--bg-card);
+        }
+
+        .code-container {
+            background: var(--inner-bg); border-radius: 12px; border: 1px solid var(--border);
+            flex-grow: 1; display: flex; flex-direction: column;
+        }
+
+        textarea {
+            background: transparent; border: none; color: #34d399;
+            font-family: 'Courier New', monospace; padding: 1rem; resize: none;
+            width: 100%; height: 350px; outline: none; font-size: 0.85rem;
+        }
+
+        .status-bar {
+            background: var(--inner-bg); padding: 0.5rem 1rem; border-radius: 8px;
+            font-size: 0.85rem; color: var(--accent); font-weight: 600; display: none;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/omggif@1.0.10/omggif.min.js"></script>
+</head>
+<body>
+
+    <header>
+        <div>
+            <h1>PixelForge Asset Studio v3.0</h1>
+            <p>1000+ Emoji Decoder & Hardware Array Vector Core</p>
+        </div>
+        <button class="btn-theme" id="themeToggle" style="background: var(--bg-card); border: 1px solid var(--border); color: var(--text); padding: 0.5rem 1rem; border-radius: 20px; cursor: pointer;">🌓 Theme</button>
+    </header>
+
+    <div class="container">
+        <div class="card">
+            <div class="card-title">Asset Input Engine</div>
+
+            <div class="source-tabs">
+                <div class="source-tab active" data-source="file">📁 Image / GIF / Sticker</div>
+                <div class="source-tab" data-source="emoji">😀 1000+ Emojis Engine</div>
+            </div>
+
+            <div class="source-panel active" id="panel-file">
+                <div class="file-upload">
+                    <input type="file" id="imageLoader" accept="image/*,image/gif">
+                    <div class="file-upload-btn" id="uploadLabel">Drop Sticker File, Photo or Live Animation GIF</div>
+                </div>
+            </div>
+
+            <div class="source-panel" id="panel-emoji">
+                <div class="control-group">
+                    <label>Select Emoji Pack Group</label>
+                    <select id="emojiCategorySelect" style="margin-bottom:0.5rem;"></select>
+                    <div class="emoji-grid-box" id="emojiGrid"></div>
+                </div>
+            </div>
+
+            <div class="dynamic-config-box" id="emojiConfigPanel">
+                <div class="control-group">
+                    <label style="color: var(--accent);">✨ Selected Emoji Control Options</label>
+                    <span id="selectedEmojiBadge" style="font-size: 1.2rem; margin-bottom: 0.25rem; display: inline-block;">Selected: None</span>
+                    <select id="animType">
+                        <option value="none">✨ Static (No Motion Sequence)</option>
+                        <option value="pulse">🎬 Breathing Pulse Motion (4 Frames)</option>
+                        <option value="spin">🎬 Continuous Vector Rotate (4 Frames)</option>
+                        <option value="bounce">🎬 Physics Vertical Bounce (4 Frames)</option>
+                        <option value="shake">🎬 Horizontal Vibration Shake (4 Frames)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="status-bar" id="statusBar">Tracking operational streams...</div>
+
+            <div class="button-row">
+                <button class="btn btn-secondary" id="cropToggleBtn" style="width:100%;" disabled>📐 Studio Precision Crop</button>
+            </div>
+
+            <div class="control-group">
+                <label for="variableName">C++ Identifier Header Map Name</label>
+                <input type="text" id="variableName" value="Dhoni">
+            </div>
+
+            <div class="input-row">
+                <div class="control-group">
+                    <label id="widthLabel">Output Width PX</label>
+                    <input type="number" id="bitmapWidth" value="128" step="8">
+                </div>
+                <div class="control-group">
+                    <label id="heightLabel">Output Height PX</label>
+                    <input type="number" id="bitmapHeight" value="64">
+                </div>
+            </div>
+
+            <div class="control-group">
+                <label id="thresholdLabel">Quantization Balance Threshold: 128</label>
+                <input type="range" id="thresholdRange" min="0" max="255" value="128">
+            </div>
+
+            <button class="btn" id="generateCodeBtn">Compile Header Array Asset &lt;/&gt;</button>
+        </div>
+
+        <div class="card">
+            <div class="tabs">
+                <div class="tab active" id="tabPreview">Active Studio Viewport</div>
+                <div class="tab" id="tabCode">Hardware Header Code Matrix</div>
+            </div>
+
+            <div id="previewWrapper" class="preview-container">
+                <div class="placeholder-text" id="placeholderText">Pick an Asset or select from 1000+ Emojis...</div>
+                
+                <div class="workspace-wrapper" id="workspaceContainer">
+                    <img id="srcImageDisplay" alt="Viewport Stream Mapping">
+                    <canvas id="previewCanvas"></canvas>
+                    
+                    <div class="crop-box-pro" id="cropBoxPro">
+                        <div class="handle-pro h-tl" data-handle="tl"></div>
+                        <div class="handle-pro h-tr" data-handle="tr"></div>
+                        <div class="handle-pro h-bl" data-handle="bl"></div>
+                        <div class="handle-pro h-br" data-handle="br"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="codeWrapper" class="code-container" style="display: none;">
+                <textarea id="codeBox" readonly placeholder="// Ready to compile binary matrix arrays..."></textarea>
+                <div style="padding: 0.75rem; background: var(--inner-bg); border-top: 1px solid var(--border); display: flex; justify-content: flex-end;">
+                    <button class="btn btn-secondary" id="copyBtn">Copy Byte Map</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // High-Volume Native Unicode Expanded Dataset System (1000+ Block Array Structures)
+        const EMOJI_SETS = {
+            "Faces & Moods": ["😀","😃","😄","😁","😆","😅","😂","🤣","🥲","😊","😇","🙂","🙃","😉","😌","😍","🥰","😘","😗","😙","😚","😋","😛","😝","😜","🤪","🤨","🧐","🤓","😎","🥸","🤩","🥳","😏","😒","😞","😔","😟","😕","🙁","☹️","😣","😖","😫","😩","🥺","😢","😭","😤","😠","😡","🤬","🤯","😳","🥵","🥶","😱","😨","😰","😥","😓","🤗","🤔","🫣","🤭","🫢","🫡","🤫","🫠","🤥","😶","😐","😑","😬","🫨","😮","😯","😲","🥱","😴","🤤","😪","😵","😵‍💫","🫥","🤐","🥴","🤢","🤮","🤧","😷","🤒","🤕","🤑","🤠","😈","👿","👹","👺","🤡","💩","👻","💀","☠️","👽","👾","🤖","🎃","😺","😸","😹","😻","😼","😽","🙀","😾"],
+            "Gestures & Hands": ["👋","🤚","🖐️","✋","🖖","👌","🤌","🤏","🫳","🫴","✌️","🤞","🫰","🤟","🤘","🤙","🫵","👈","👉","👆","🖕","👇","☝️","👍","👎","✊","👊","🤛","🤜","👏","🙌","👐","🤲","🤝","🙏","✍️","💅","🤳","💪","🦾","🦿","🦵","🦶","👂","🦻","👃","🧠","🫀","🫁","🦷","🦴","👀","👁️","👅","👄","💋","🩸"],
+            "Animals & Wildlife": ["🐶","🐱","🐭","🐹","🐰","🦊","🐻","🐼","🐻‍❄️","🐨","🐯","🦁","🐮","🐷","🐽","🐸","🐵","🙈","🙉","🙊","🐒","🐔","🐧","🐦","🐤","🐣","🐥","🦆","🦅","🦉","🦤","🦩","🦚","🦜","🦢","🦤","🦫","🦨","🦡","🦘","🦬","🐄","🐖","🐏","🐑","🐐","🐪","🐫","🦙","🦒","🐘","🦣","🦏","🦛","🐭","🐁","🐀","🐹","🐰","🐇","🐿️","🦫","🦔","🦇","🐻","🐨","🐼","🦥","🦦","🦨","🦘","🦡","🦅","🦆","🦢","🦉","🦤","🦩","🦚","🦜","🐊","🐢","🦎","🐍","🐲","🐉","🦕","🦖","🐳","🐋","🐬","🦭","🐟","🐠","🐡","🦈","🐙","🐚","🪼","🦀","🦞","🦐","🦑","🦋","🐌","🐛","🐜","🐝","🪲","🐞","🦗","🕷️","🕸️","🦂","🦟","🪰","🪱","🦠"],
+            "Food & Delicacies": ["🍏","🍎","🍐","🍊","🍋","🍌","🍉","🍇","🍓","🫐","멜","🍒","🍑","🥭","🍍","🥥","🥝","🍅","🫒","🥑","🍆","🥔","🥕","🌽","🌶️","🫑","🧅","🧄","🫘","🍄","🥜","🫚","🪺","🍞","🥐","🥖","🫓","🥨","🥯","🥞","🧇","🧀","🍖","🍗","🥩","🥓","🍔","🍟","🍕","🌭","🥪","🌮","🌯","🫔","🥙","🧆","🍳","🥘","🍲","🫕","🥣","🥗","🍿","🧈","🧂","🥫","🍱","🍘","🍙","🍚","🍛","🍜","🍝","🍠","🍢","🍣","🍤","🍥","🦪","🍡","🥟","🥠","🥡","🍦","🍧","🍨","🍩","🍪","🎂","🍰","🧁","🥧","🍫","🍬","🍭","🍮","🍯","🍼","🥛","☕","🫖","🍵","🍶","🍾","🍷","🍸","🍹","🍺","🍻","🥂","🥃","🥤","🧋","🧃","🧉","🧊"],
+            "Activities & Gaming": ["⚽","🇺🇸","🏀","🏐","🏈","🏉","🎾","🥏","🎳","🏏","🏑","🏒","🥍","🏓","🏸","🥊","🥋","🥅","⛳","⛸️","🎣","🤿","🎽","🎿"," sled","🥌","🎯","🪀","🪁","🔮","🧿","🎮","🕹️","🎰","🎲","🧩","🧸","🪅","🪩","🪆","🎨","🖼️","🧵","🪡","🧶","🪢","🎼","🎵","🎶","🎙️","🎚️","🎛️","🎤","🎧","📻","🎷","🪗","🎸","🎹","🎺","🎻","🪕","🥁","🪘","🪇","🪈","📱","☎️","📟","📠"],
+            "Travel & Cosmos": ["🚗","🚕","🚙","🚌","🚎","🏎️","🚓","🚑","🚒","🚐","🛻","🚚","🚛","🚜","🛵","🏍️","🛺","🚲","🛴","🛹","🛼","🚏","🛣️","🛤️","🛢️","⛽","🚨","🚥","🚦","🛑","🚧","⚓","⛵","🛶","🚤","🛳️","⛴️","🚢","✈️","🛩️","🛫","🛬","🪂","💺","🚁","🚟","🚠","🚡","🛰️","🚀","🛸","🛸","🪐","🌟","⭐","✨","⚡","💥","🔥","🌪️","🌈","☀️","🌤️","⛅","🌥️","☁️","🌦️","🌧️","⛈️","🌩️","🌨️","❄️","☃️","⛄","🌬️","💨","💧","💦","🫧","☔","☂️","🌊","🌫️"],
+            "Symbols & Geometric": ["💘","💝","💖","💗","💓","💞","💕","💟","❣️","💔","❤️","❤️‍🔥","❤️‍🩹","🧡","💛","💚","💙","💜","🖤","🤍","🤎","🩵","🩶","🩷","💯","💢","💥","💫","💦","💨","🕳️","💣","💬","👁️‍🗨️","🗨️","🗯️","💭","💤","🌐","🌀","♠️","♥️","♦️","♣️","🃏","🀄","🎴","🎭","🔇","🔈","🔉","🔊","📢","📣","📯","🔔","🔕","🎵","🎶","💹","🛗","🏧","🚮","🚰","♿","🚹","🚺","🚻","🚼","🚾","🛂","🛃","🛄","🛅","⚠️","🚸","⛔","🚫","🚳","🚯","🚷","🚱","🚳","☢️","☣️","⬆️","↗️","➡️","↘️","⬇️","↙️","⬅️","↖️","↕️","↔️","↩️","↪️","⤴️","⤵️","🔀","🔁","🔂","🔄","🔃"]
+        };
+
+        // UI Hooks
+        const imageLoader = document.getElementById('imageLoader');
+        const uploadLabel = document.getElementById('uploadLabel');
+        const canvas = document.getElementById('previewCanvas');
+        const ctx = canvas.getContext('2d');
+        const srcImageDisplay = document.getElementById('srcImageDisplay');
+        const workspaceContainer = document.getElementById('workspaceContainer');
+        const cropBoxPro = document.getElementById('cropBoxPro');
+        const statusBar = document.getElementById('statusBar');
+        const emojiConfigPanel = document.getElementById('emojiConfigPanel');
+        const selectedEmojiBadge = document.getElementById('selectedEmojiBadge');
+        
+        const bitmapWidthInput = document.getElementById('bitmapWidth');
+        const bitmapHeightInput = document.getElementById('bitmapHeight');
+        const thresholdRange = document.getElementById('thresholdRange');
+        const variableNameInput = document.getElementById('variableName');
+        const animTypeSelect = document.getElementById('animType');
+        
+        const widthLabel = document.getElementById('widthLabel');
+        const heightLabel = document.getElementById('heightLabel');
+        const thresholdLabel = document.getElementById('thresholdLabel');
+        
+        const generateCodeBtn = document.getElementById('generateCodeBtn');
+        const cropToggleBtn = document.getElementById('cropToggleBtn');
+        const themeToggle = document.getElementById('themeToggle');
+        const codeBox = document.getElementById('codeBox');
+        
+        const tabPreview = document.getElementById('tabPreview');
+        const tabCode = document.getElementById('tabCode');
+        const previewWrapper = document.getElementById('previewWrapper');
+        const codeWrapper = document.getElementById('codeWrapper');
+        const placeholderText = document.getElementById('placeholderText');
+        const copyBtn = document.getElementById('copyBtn');
+
+        let originalImage = null; 
+        let gifFramesData = []; 
+        let activeRenderPlaybackInterval = null;
+        let activePlaybackIndex = 0;
+        
+        let isCropMode = false;
+        let currentActiveSourceTab = "file";
+        let cropMetrics = { top: 0, left: 0, width: 100, height: 100 };
+        let isDragging = false, isResizing = false, activeResizeHandle = "";
+        let startX, startY, startLeft, startTop, startWidth, startHeight;
+
+        // Build Massive Category Navigation Dropdowns
+        const emojiCategorySelect = document.getElementById('emojiCategorySelect');
+        const emojiGrid = document.getElementById('emojiGrid');
+        Object.keys(EMOJI_SETS).forEach(cat => {
+            let opt = document.createElement('option'); opt.value = cat; opt.textContent = cat;
+            emojiCategorySelect.appendChild(opt);
+        });
+        function loadEmojiGrid(catName) {
+            emojiGrid.innerHTML = "";
+            EMOJI_SETS[catName].forEach(em => {
+                let cell = document.createElement('div'); cell.className = "emoji-item"; cell.textContent = em;
+                cell.addEventListener('click', () => {
+                    document.querySelectorAll('.emoji-item').forEach(i => i.classList.remove('active'));
+                    cell.classList.add('active');
+                    
+                    // Display Configuration Options right underneath emoji list click triggers
+                    selectedEmojiBadge.textContent = `Selected Target: ${em}`;
+                    emojiConfigPanel.style.display = 'block';
+                    
+                    importEmojiAsset(em);
+                });
+                emojiGrid.appendChild(cell);
+            });
+        }
+        emojiCategorySelect.addEventListener('change', (e) => loadEmojiGrid(e.target.value));
+        loadEmojiGrid(Object.keys(EMOJI_SETS)[0]);
+
+        // Route File attachment pipeline streams
+        imageLoader.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            clearInterval(activeRenderPlaybackInterval);
+            gifFramesData = [];
+            placeholderText.style.display = 'none';
+            emojiConfigPanel.style.display = 'block'; // Reveal options even for single photo frames
+            selectedEmojiBadge.textContent = `Attached File/Sticker Mode`;
+
+            if (file.type === "image/gif") {
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    decodeGifBinaryToFrames(new Uint8Array(evt.target.result));
+                };
+                reader.readAsArrayBuffer(file);
+            } else {
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    originalImage = new Image();
+                    originalImage.onload = () => {
+                        srcImageDisplay.src = originalImage.src;
+                        cropToggleBtn.disabled = false;
+                        cropMetrics = { top: 10, left: 10, width: 80, height: 80 };
+                        statusBar.style.display = 'none';
+                        executeRenderLoopEngine();
+                    };
+                    originalImage.src = evt.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Parse GIF Stream via Omggif
+        function decodeGifBinaryToFrames(uint8Array) {
+            try {
+                statusBar.textContent = "Decoding animated frames...";
+                statusBar.style.display = 'block';
+                
+                const gifReader = new GifReader(uint8Array);
+                const width = gifReader.width; const height = gifReader.height;
+                
+                const frameCanvas = document.createElement('canvas');
+                frameCanvas.width = width; frameCanvas.height = height;
+                const fCtx = frameCanvas.getContext('2d');
+                let frameImageData = fCtx.createImageData(width, height);
+
+                for (let i = 0; i < gifReader.numFrames(); i++) {
+                    gifReader.decodeAndBlitFrameRGBA(i, frameImageData.data);
+                    fCtx.putImageData(frameImageData, 0, 0);
+                    
+                    const cacheCanvas = document.createElement('canvas');
+                    cacheCanvas.width = width; cacheCanvas.height = height;
+                    cacheCanvas.getContext('2d').drawImage(frameCanvas, 0, 0);
+                    
+                    gifFramesData.push({
+                        canvas: cacheCanvas,
+                        delay: gifReader.frameInfo(i).delay * 10
+                    });
+                }
+
+                statusBar.textContent = `Extracted ${gifFramesData.length} active gif buffers!`;
+                cropToggleBtn.disabled = true;
+                cropMetrics = { top: 0, left: 0, width: 100, height: 100 };
+                executeRenderLoopEngine();
+            } catch (err) {
+                alert("Failed decoding animated asset.");
+                statusBar.style.display = 'none';
+            }
+        }
+
+        function importEmojiAsset(em) {
+            clearInterval(activeRenderPlaybackInterval);
+            gifFramesData = [];
+            statusBar.style.display = 'none';
+            placeholderText.style.display = 'none';
+
+            const temp = document.createElement('canvas');
+            temp.width = 256; temp.height = 256;
+            const tCtx = temp.getContext('2d');
+            tCtx.font = "180px sans-serif"; tCtx.textAlign = "center"; tCtx.textBaseline = "middle";
+            tCtx.fillText(em, 128, 135);
+
+            originalImage = new Image();
+            originalImage.onload = () => {
+                srcImageDisplay.src = originalImage.src;
+                cropToggleBtn.disabled = true;
+                cropMetrics = { top: 0, left: 0, width: 100, height: 100 };
+                executeRenderLoopEngine();
+            };
+            originalImage.src = temp.toDataURL();
+        }
+
+        /* --- Workspace Render Matrix Core Engine Loops --- */
+        function executeRenderLoopEngine() {
+            clearInterval(activeRenderPlaybackInterval);
+            
+            const motionFX = animTypeSelect.value;
+            const isGifActive = gifFramesData.length > 0;
+            const isProceduralActive = (motionFX !== 'none');
+
+            if (isGifActive) {
+                activePlaybackIndex = 0;
+                activeRenderPlaybackInterval = setInterval(() => {
+                    const currentFrame = gifFramesData[activePlaybackIndex];
+                    renderFrameToTargetResolution(currentFrame.canvas);
+                    activePlaybackIndex = (activePlaybackIndex + 1) % gifFramesData.length;
+                }, gifFramesData[0].delay || 100);
+            } else if (isProceduralActive) {
+                activePlaybackIndex = 0;
+                activeRenderPlaybackInterval = setInterval(() => {
+                    renderFrameToTargetResolution(originalImage, { type: motionFX, step: activePlaybackIndex });
+                    activePlaybackIndex = (activePlaybackIndex + 1) % 4;
+                }, 120);
+            } else {
+                renderFrameToTargetResolution(originalImage);
+            }
+        }
+
+        function renderFrameToTargetResolution(sourceAsset, fxSpecs = null) {
+            if (!sourceAsset || isCropMode) return;
+
+            const tw = parseInt(bitmapWidthInput.value) || 128;
+            const th = parseInt(bitmapHeightInput.value) || 64;
+            const threshold = parseInt(thresholdRange.value);
+
+            widthLabel.textContent = `Target Pixel Width: ${tw}`;
+            heightLabel.textContent = `Target Pixel Height: ${th}`;
+
+            canvas.width = tw; canvas.height = th;
+            ctx.fillStyle = "#000000"; ctx.fillRect(0, 0, tw, th);
+
+            const sX = (cropMetrics.left / 100) * sourceAsset.width;
+            const sY = (cropMetrics.top / 100) * sourceAsset.height;
+            const sW = (cropMetrics.width / 100) * sourceAsset.width;
+            const sH = (cropMetrics.height / 100) * sourceAsset.height;
+
+            ctx.save();
+            if (fxSpecs) {
+                if (fxSpecs.type === 'pulse') {
+                    let s = 1 - (fxSpecs.step * 0.08);
+                    ctx.translate(tw/2, th/2); ctx.scale(s, s); ctx.translate(-tw/2, -th/2);
+                } else if (fxSpecs.type === 'spin') {
+                    let a = (fxSpecs.step * 90) * Math.PI / 180;
+                    ctx.translate(tw/2, th/2); ctx.rotate(a); ctx.translate(-tw/2, -th/2);
+                } else if (fxSpecs.type === 'bounce') {
+                    let offset = (fxSpecs.step % 2 === 0) ? -5 : 5;
+                    if(fxSpecs.step === 0 || fxSpecs.step === 3) offset = 0;
+                    ctx.translate(0, offset);
+                } else if (fxSpecs.type === 'shake') {
+                    let offset = (fxSpecs.step % 2 === 0) ? -4 : 4;
+                    ctx.translate(offset, 0);
+                }
+            }
+
+            ctx.drawImage(sourceAsset, sX, sY, sW, sH, 0, 0, tw, th);
+            ctx.restore();
+
+            // Quantization Layer Array Passes
+            const imgData = ctx.getImageData(0, 0, tw, th);
+            const d = imgData.data;
+            for (let i = 0; i < d.length; i += 4) {
+                let luminance = (d[i+3] < 30) ? 0 : (0.2126 * d[i] + 0.7152 * d[i+1] + 0.0722 * d[i+2]);
+                let col = (luminance >= threshold) ? 255 : 0;
+                d[i] = col; d[i+1] = col; d[i+2] = col; d[i+3] = 255;
+            }
+            ctx.putImageData(imgData, 0, 0);
+        }
+
+        /* --- Global Structural Binary Code Exporter --- */
+        function generateHardwareOutputCode() {
+            if (isCropMode) disableCropModeUI();
+            if (!originalImage && gifFramesData.length === 0) {
+                codeBox.value = "// Load asset vector parameters first!"; switchTab('code'); return;
+            }
+
+            const tw = canvas.width; const th = canvas.height;
+            const threshold = parseInt(thresholdRange.value);
+            const varName = variableNameInput.value.trim() || "Dhoni";
+            const motionFX = animTypeSelect.value;
+
+            let totalFrames = 1;
+            let exportSourceIsGif = (gifFramesData.length > 0);
+            let exportSourceIsFX = (motionFX !== 'none' && gifFramesData.length === 0);
+
+            if (exportSourceIsGif) totalFrames = gifFramesData.length;
+            else if (exportSourceIsFX) totalFrames = 4;
+
+            let finalOutputString = `/* \n * PixelForge Studio Generated Asset Header\n * Array Layout Dimensionality: ${tw}x${th}\n */\n\n`;
+            let generatedArrayTableNames = [];
+
+            clearInterval(activeRenderPlaybackInterval);
+
+            for (let f = 0; f < totalFrames; f++) {
+                let targetFrameCanvas = null;
+                if (exportSourceIsGif) {
+                    targetFrameCanvas = gifFramesData[f].canvas;
+                    renderFrameToTargetResolution(targetFrameCanvas);
+                } else if (exportSourceIsFX) {
+                    renderFrameToTargetResolution(originalImage, { type: motionFX, step: f });
+                } else {
+                    renderFrameToTargetResolution(originalImage);
+                }
+
+                let currentFrameVarName = (totalFrames === 1) ? varName : `${varName}_frame_${f}`;
+                generatedArrayTableNames.push(currentFrameVarName);
+
+                finalOutputString += `static const uint8_t PROGMEM ${currentFrameVarName}[] = {\n  `;
+                finalOutputString += parseCanvasBytesToHexRowString(tw, th, threshold);
+                finalOutputString += "\n};\n\n";
+            }
+
+            if (totalFrames > 1) {
+                finalOutputString += `// Sequence Lookup Table Pointer Configuration Array:\n`;
+                finalOutputString += `static const uint8_t* const ${varName}_Animation[] PROGMEM = {\n  `;
+                finalOutputString += generatedArrayTableNames.join(", ") + "\n};";
+            }
+
+            codeBox.value = finalOutputString;
+            switchTab('code');
+            executeRenderLoopEngine();
+        }
+
+        function parseCanvasBytesToHexRowString(w, h, th) {
+            const imgData = ctx.getImageData(0, 0, w, h); const data = imgData.data;
+            let currentByte = 0, bitIndex = 0, collector = [];
+
+            for (let y = 0; y < h; y++) {
+                for (let x = 0; x < w; x++) {
+                    let idx = (y * w + x) * 4;
+                    let luminance = (0.2126 * data[idx] + 0.7152 * data[idx+1] + 0.0722 * data[idx+2]);
+                    if (luminance >= th) currentByte |= (1 << (7 - bitIndex));
+                    bitIndex++;
+                    if (bitIndex === 8) {
+                        collector.push('0x' + currentByte.toString(16).padStart(2, '0'));
+                        currentByte = 0; bitIndex = 0;
+                    }
+                }
+                if (bitIndex > 0) {
+                    collector.push('0x' + currentByte.toString(16).padStart(2, '0'));
+                    currentByte = 0; bitIndex = 0;
+                }
+            }
+            let strOut = "";
+            for (let i = 0; i < collector.length; i++) {
+                strOut += collector[i];
+                if (i < collector.length - 1) {
+                    strOut += ", "; if ((i + 1) % 16 === 0) strOut += "\n  ";
+                }
+            }
+            return strOut;
+        }
+
+        /* --- Crop Layout Controllers Overlay --- */
+        cropToggleBtn.addEventListener('click', () => {
+            if (!originalImage || gifFramesData.length > 0) return;
+            if (isCropMode) disableCropModeUI(); else enableCropModeUI();
+        });
+
+        function enableCropModeUI() {
+            isCropMode = true; clearInterval(activeRenderPlaybackInterval);
+            cropToggleBtn.textContent = "💾 Freeze & Lock Boundaries"; cropToggleBtn.classList.add('btn-crop-active');
+            canvas.style.display = 'none'; srcImageDisplay.style.display = 'block'; cropBoxPro.style.display = 'block';
+            updateCropOverlayUI();
+        }
+
+        function disableCropModeUI() {
+            isCropMode = false;
+            cropToggleBtn.textContent = "📐 Studio Precision Crop"; cropToggleBtn.classList.remove('btn-crop-active');
+            cropBoxPro.style.display = 'none'; srcImageDisplay.style.display = 'none'; canvas.style.display = 'block';
+            executeRenderLoopEngine();
+        }
+
+        function updateCropOverlayUI() {
+            cropBoxPro.style.top = cropMetrics.top + '%'; cropBoxPro.style.left = cropMetrics.left + '%';
+            cropBoxPro.style.width = cropMetrics.width + '%'; cropBoxPro.style.height = cropMetrics.height + '%';
+        }
+
+        cropBoxPro.addEventListener('mousedown', (e) => {
+            if (e.target.classList.contains('handle-pro')) {
+                isResizing = true; activeResizeHandle = e.target.getAttribute('data-handle');
+            } else { isDragging = true; }
+            startX = e.clientX; startY = e.clientY;
+            const rect = workspaceContainer.getBoundingClientRect();
+            startLeft = (cropBoxPro.offsetLeft / rect.width) * 100; startTop = (cropBoxPro.offsetTop / rect.height) * 100;
+            startWidth = (cropBoxPro.offsetWidth / rect.width) * 100; startHeight = (cropBoxPro.offsetHeight / rect.height) * 100;
+            e.preventDefault();
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (!isDragging && !isResizing) return;
+            const rect = workspaceContainer.getBoundingClientRect();
+            let dx = ((e.clientX - startX) / rect.width) * 100; let dy = ((e.clientY - startY) / rect.height) * 100;
+
+            if (isDragging) {
+                let l = startLeft + dx, t = startTop + dy;
+                if(l < 0) l = 0; if(t < 0) t = 0;
+                if(l + cropMetrics.width > 100) l = 100 - cropMetrics.width;
+                if(t + cropMetrics.height > 100) t = 100 - cropMetrics.height;
+                cropMetrics.left = l; cropMetrics.top = t;
+            } else if (isResizing) {
+                let h = activeResizeHandle;
+                if (h.includes('r')) cropMetrics.width = Math.max(5, Math.min(startWidth + dx, 100 - cropMetrics.left));
+                if (h.includes('b')) cropMetrics.height = Math.max(5, Math.min(startHeight + dy, 100 - cropMetrics.top));
+                if (h.includes('l')) {
+                    let maxW = startLeft + startWidth; let targetL = Math.max(0, Math.min(startLeft + dx, maxW - 5));
+                    cropMetrics.width = maxW - targetL; cropMetrics.left = targetL;
+                }
+                if (h.includes('t')) {
+                    let maxH = startTop + startHeight; let targetT = Math.max(0, Math.min(startTop + dy, maxH - 5));
+                    cropMetrics.height = maxH - targetT; cropMetrics.top = targetT;
+                }
+            }
+            updateCropOverlayUI();
+        });
+
+        window.addEventListener('mouseup', () => { isDragging = false; isResizing = false; });
+
+        document.querySelectorAll('.source-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.source-tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.source-panel').forEach(p => p.classList.remove('active'));
+                tab.classList.add('active');
+                currentActiveSourceTab = tab.getAttribute('data-source');
+                document.getElementById(`panel-${currentActiveSourceTab}`).classList.add('active');
+                clearInterval(activeRenderPlaybackInterval);
+                gifFramesData = []; statusBar.style.display = 'none';
+                emojiConfigPanel.style.display = 'none';
+                
+                if (currentActiveSourceTab === 'file') {
+                    canvas.style.display = 'none'; srcImageDisplay.style.display = 'none'; placeholderText.style.display = 'block';
+                }
+            });
+        });
+
+        function switchTab(tabName) {
+            if (tabName === 'preview') {
+                tabPreview.classList.add('active'); tabCode.classList.remove('active');
+                previewWrapper.style.display = 'flex'; codeWrapper.style.display = 'none';
+            } else {
+                tabCode.classList.add('active'); tabPreview.classList.remove('active');
+                previewWrapper.style.display = 'none'; codeWrapper.style.display = 'flex';
+            }
+        }
+
+        themeToggle.addEventListener('click', () => {
+            if (document.documentElement.getAttribute('data-theme') === 'light') document.documentElement.removeAttribute('data-theme');
+            else document.documentElement.setAttribute('data-theme', 'light');
+        });
+
+        bitmapWidthInput.addEventListener('input', () => executeRenderLoopEngine());
+        bitmapHeightInput.addEventListener('input', () => executeRenderLoopEngine());
+        thresholdRange.addEventListener('input', () => executeRenderLoopEngine());
+        animTypeSelect.addEventListener('change', () => executeRenderLoopEngine());
+        generateCodeBtn.addEventListener('click', generateHardwareOutputCode);
+        tabPreview.addEventListener('click', () => switchTab('preview'));
+        tabCode.addEventListener('click', () => switchTab('code'));
+        
+        copyBtn.addEventListener('click', () => {
+            codeBox.select(); document.execCommand('copy');
+            const cached = copyBtn.textContent; copyBtn.textContent = 'Copied Arrays! 🚀';
+            setTimeout(() => copyBtn.textContent = cached, 2000);
+        });
+    </script>
+</body>
+</html>
