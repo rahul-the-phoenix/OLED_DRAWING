@@ -34,7 +34,7 @@
         .container { display: grid; grid-template-columns: 480px 1fr; gap: 2rem; max-width: 1400px; width: 100%; }
         @media (max-width: 1024px) { .container { grid-template-columns: 1fr; } }
         .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem; display: flex; flex-direction: column; gap: 1.25rem; box-shadow: var(--shadow); }
-        .card-title { font-size: 1.1rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); border-bottom: 1px solid var(--border); padding-bottom: 0.75rem; }
+        .card-title { font-size: 1.1rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); border-bottom: 1px solid var(--border); padding-bottom: 0.75rem; display: flex; justify-content: space-between; align-items: center; }
         .control-group { display: flex; flex-direction: column; gap: 0.5rem; }
         label { font-size: 0.825rem; color: var(--text); font-weight: 600; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
         .input-row { display: flex; gap: 1rem; }
@@ -76,8 +76,8 @@
         .tabs { display: flex; gap: 0.5rem; flex-wrap: wrap; }
         .tab { padding: 0.5rem 1rem; border-radius: 8px 8px 0 0; cursor: pointer; background: var(--border); font-size: 0.85rem; color: var(--text-muted); }
         .tab.active { background: var(--bg-card); color: var(--accent); font-weight: 700; border: 1px solid var(--border); border-bottom: 2px solid var(--bg-card); }
-        .code-container { background: var(--inner-bg); border-radius: 12px; border: 1px solid var(--border); flex-grow: 1; display: flex; flex-direction: column; }
-        textarea.code-area { background: transparent; border: none; color: #34d399; font-family: 'Courier New', monospace; padding: 1rem; resize: none; width: 100%; height: 350px; outline: none; font-size: 0.85rem; }
+        .code-container { background: var(--inner-bg); border-radius: 12px; border: 1px solid var(--border); flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; }
+        textarea.code-area { background: transparent; border: none; color: #34d399; font-family: 'Courier New', monospace; padding: 1rem; resize: none; width: 100%; height: 100%; outline: none; font-size: 0.8rem; line-height: 1.5; min-height: 500px; }
         .status-bar { background: var(--inner-bg); padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.85rem; color: var(--accent); font-weight: 600; display: none; }
         .btn-row { display: flex; gap: 0.5rem; flex-wrap: wrap; }
         .pixel-toggle-group { display: flex; align-items: center; gap: 0.75rem; background: var(--inner-bg); padding: 0.4rem 0.8rem; border-radius: 30px; border: 1px solid var(--border); }
@@ -109,7 +109,59 @@
             50% { opacity: 0.5; }
         }
         
-        /* Animation preview styles */
+        .size-value {
+            min-width: 60px;
+            text-align: center;
+            font-weight: 700;
+            color: var(--accent);
+            font-size: 1.1rem;
+            background: var(--inner-bg);
+            padding: 2px 10px;
+            border-radius: 6px;
+        }
+
+        .code-tabs {
+            display: flex;
+            gap: 0.5rem;
+            padding: 0.5rem;
+            background: var(--inner-bg);
+            border-bottom: 1px solid var(--border);
+        }
+        .code-tab {
+            padding: 0.4rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            background: transparent;
+            transition: all 0.2s;
+        }
+        .code-tab.active {
+            background: var(--bg-card);
+            color: var(--accent);
+            border: 1px solid var(--border);
+        }
+        .code-tab:hover {
+            background: var(--bg-card);
+        }
+        .code-content {
+            flex: 1;
+            overflow: auto;
+        }
+        .code-content textarea {
+            height: 100%;
+            min-height: 450px;
+        }
+        .code-tab-badge {
+            font-size: 0.6rem;
+            background: var(--accent);
+            color: #000;
+            padding: 0px 6px;
+            border-radius: 10px;
+            margin-left: 4px;
+        }
+        
         .anim-pulse { animation: pulseAnim 0.8s ease-in-out infinite; }
         @keyframes pulseAnim { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.4); } }
         .anim-spin { animation: spinAnim 1s linear infinite; }
@@ -167,12 +219,26 @@
         
         select option { padding: 6px 10px; }
         #animType { font-size: 0.9rem; }
+        
+        .copy-btn-small {
+            padding: 0.3rem 0.8rem;
+            font-size: 0.7rem;
+            background: var(--accent);
+            color: #000;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 700;
+        }
+        .copy-btn-small:hover {
+            background: var(--accent-hover);
+        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/omggif@1.0.10/omggif.min.js"></script>
 </head>
 <body>
     <header>
-        <div><h1>PixelForge Language Studio <span class="live-badge">⚡ LIVE</span></h1><p>5 Languages · 27 Animations · 40+ Fonts · Dynamic Rendering</p></div>
+        <div><h1>PixelForge Language Studio <span class="live-badge">⚡ LIVE</span></h1><p>5 Languages · 27 Animations · 60+ Fonts · Dynamic Rendering</p></div>
         <div style="display:flex; gap:0.5rem; align-items:center;">
             <button class="btn-theme" id="themeToggle" style="background: var(--bg-card); border: 1px solid var(--border); color: var(--text); padding: 0.5rem 1rem; border-radius: 20px; cursor: pointer;">🌓 Theme</button>
         </div>
@@ -203,15 +269,20 @@
                 </div>
                 <div class="control-group">
                     <label>✏️ Type your text <span style="font-size:0.7rem; color:var(--text-muted);">(auto-updates)</span></label>
-                    <textarea id="textInput" placeholder="Type here... e.g., Hello / नमस्ते / নমস্কার / வணக்கம் / السلام علیکم" rows="2"></textarea>
+                    <textarea id="textInput" placeholder="Type here... e.g., Hello / नमस्ते / নমস্কার" rows="2"></textarea>
                     <div class="char-count" id="charCount">0 characters</div>
                 </div>
                 <div class="control-group">
-                    <label>🔤 Text Size <span id="sizeDisplay" style="color:var(--accent);">64px</span></label>
+                    <label>🔤 Text Size <span id="sizeDisplay" class="size-value">64px</span></label>
                     <div class="size-control">
-                        <span style="font-size:0.7rem;">8</span>
-                        <input type="range" id="textSizeRange" min="8" max="300" value="64">
-                        <span style="font-size:0.7rem;">300</span>
+                        <span style="font-size:0.7rem; min-width:30px;">8</span>
+                        <input type="range" id="textSizeRange" min="8" max="300" value="64" step="1">
+                        <span style="font-size:0.7rem; min-width:30px;">300</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; font-size:0.65rem; color:var(--text-muted); padding:0 5px;">
+                        <span>Small</span>
+                        <span id="sizeDisplay2">64px</span>
+                        <span>Large</span>
                     </div>
                 </div>
                 <div style="font-size:0.75rem; color:var(--accent); text-align:center; padding:0.3rem; background:var(--inner-bg); border-radius:6px;">
@@ -298,9 +369,16 @@
         </div>
 
         <div class="card">
+            <div class="card-title">
+                <span>📄 Code Output</span>
+                <div style="display:flex; gap:0.5rem;">
+                    <button class="copy-btn-small" id="copyFullCodeBtn">📋 Copy Full Code</button>
+                </div>
+            </div>
             <div class="tabs">
                 <div class="tab active" id="tabPreview">🎨 Viewport</div>
                 <div class="tab" id="tabCode">📄 Code Matrix</div>
+                <div class="tab" id="tabFullCode">📦 Full Code</div>
             </div>
             <div id="previewWrapper" class="preview-container">
                 <div class="placeholder-text" id="placeholderText">Type text, upload image, or pick emoji...</div>
@@ -319,6 +397,12 @@
                 <textarea class="code-area" id="codeBox" readonly placeholder="// Generated C++ header..."></textarea>
                 <div style="padding: 0.75rem; background: var(--inner-bg); border-top: 1px solid var(--border); display: flex; justify-content: flex-end;">
                     <button class="btn btn-secondary" id="copyBtn">📋 Copy</button>
+                </div>
+            </div>
+            <div id="fullCodeWrapper" class="code-container" style="display: none;">
+                <textarea class="code-area" id="fullCodeBox" readonly placeholder="// Full Arduino/ESP32 code with includes..."></textarea>
+                <div style="padding: 0.75rem; background: var(--inner-bg); border-top: 1px solid var(--border); display: flex; justify-content: flex-end;">
+                    <button class="btn btn-secondary" id="copyFullCodeBtn2">📋 Copy Full Code</button>
                 </div>
             </div>
         </div>
@@ -354,16 +438,33 @@
                 { name: 'Latha', family: 'Latha, sans-serif' }
             ],
             bn: [
-                { name: 'Vrinda', family: 'Vrinda, sans-serif' },
-                { name: 'Nirmala UI', family: 'Nirmala UI, sans-serif' },
                 { name: 'Noto Sans Bengali', family: 'Noto Sans Bengali, sans-serif' },
-                { name: 'Arial Unicode MS', family: 'Arial Unicode MS, sans-serif' },
+                { name: 'Noto Serif Bengali', family: 'Noto Serif Bengali, serif' },
+                { name: 'Nirmala UI', family: 'Nirmala UI, sans-serif' },
                 { name: 'Segoe UI', family: 'Segoe UI, sans-serif' },
+                { name: 'Arial Unicode MS', family: 'Arial Unicode MS, sans-serif' },
                 { name: 'Tahoma', family: 'Tahoma, sans-serif' },
+                { name: 'Vrinda', family: 'Vrinda, sans-serif' },
                 { name: 'Shonar Bangla', family: 'Shonar Bangla, sans-serif' },
-                { name: 'SutonnyMJ', family: 'SutonnyMJ, sans-serif' },
                 { name: 'Kalpurush', family: 'Kalpurush, sans-serif' },
-                { name: 'Bangla', family: 'Bangla, sans-serif' }
+                { name: 'SutonnyMJ', family: 'SutonnyMJ, sans-serif' },
+                { name: 'Bangla', family: 'Bangla, sans-serif' },
+                { name: 'Siyam Rupali', family: 'Siyam Rupali, sans-serif' },
+                { name: 'Mitra Mono', family: 'Mitra Mono, monospace' },
+                { name: 'Mukti Narrow', family: 'Mukti Narrow, sans-serif' },
+                { name: 'SolaimanLipi', family: 'SolaimanLipi, sans-serif' },
+                { name: 'Hind Siliguri', family: 'Hind Siliguri, sans-serif' },
+                { name: 'Baloo Da 2', family: 'Baloo Da 2, sans-serif' },
+                { name: 'Galada', family: 'Galada, cursive' },
+                { name: 'Fira Sans Bengali', family: 'Fira Sans Bengali, sans-serif' },
+                { name: 'Khand', family: 'Khand, sans-serif' },
+                { name: 'Tiro Bangla', family: 'Tiro Bangla, serif' },
+                { name: 'Atma', family: 'Atma, sans-serif' },
+                { name: 'Anek Bangla', family: 'Anek Bangla, sans-serif' },
+                { name: 'Bangla MN', family: 'Bangla MN, sans-serif' },
+                { name: 'Bangla Sangam MN', family: 'Bangla Sangam MN, sans-serif' },
+                { name: 'Alpona', family: 'Alpona, cursive' },
+                { name: 'Lalit', family: 'Lalit, sans-serif' }
             ],
             ta: [
                 { name: 'Latha', family: 'Latha, sans-serif' },
@@ -419,18 +520,24 @@
         const cropToggleBtn = document.getElementById('cropToggleBtn');
         const themeToggle = document.getElementById('themeToggle');
         const codeBox = document.getElementById('codeBox');
+        const fullCodeBox = document.getElementById('fullCodeBox');
         const tabPreview = document.getElementById('tabPreview');
         const tabCode = document.getElementById('tabCode');
+        const tabFullCode = document.getElementById('tabFullCode');
         const previewWrapper = document.getElementById('previewWrapper');
         const codeWrapper = document.getElementById('codeWrapper');
+        const fullCodeWrapper = document.getElementById('fullCodeWrapper');
         const placeholderText = document.getElementById('placeholderText');
         const copyBtn = document.getElementById('copyBtn');
+        const copyFullCodeBtn = document.getElementById('copyFullCodeBtn');
+        const copyFullCodeBtn2 = document.getElementById('copyFullCodeBtn2');
         const pixelToggle = document.getElementById('pixelToggle');
         const textInput = document.getElementById('textInput');
         const languageSelect = document.getElementById('languageSelect');
         const fontSelect = document.getElementById('fontSelect');
         const textSizeRange = document.getElementById('textSizeRange');
         const sizeDisplay = document.getElementById('sizeDisplay');
+        const sizeDisplay2 = document.getElementById('sizeDisplay2');
         const charCount = document.getElementById('charCount');
 
         let originalImage = null;
@@ -443,6 +550,7 @@
         let isDragging = false, isResizing = false, activeResizeHandle = "";
         let startX, startY, startLeft, startTop, startWidth, startHeight;
         let renderTimeout = null;
+        let currentArrayData = '';
 
         // ========== FONT MANAGEMENT ==========
         function updateFonts() {
@@ -497,7 +605,7 @@
                     renderTextToBitmapDynamic();
                 }
                 renderTimeout = null;
-            }, 150);
+            }, 100);
         }
 
         function renderTextToBitmapDynamic() {
@@ -517,9 +625,7 @@
             selectedBadge.textContent = `Text: "${text.substring(0, 20)}${text.length > 20 ? '...' : ''}"`;
             
             const lang = languageSelect.value;
-            const langNames = { en: 'English', hi: 'Hindi', bn: 'Bengali', ta: 'Tamil', ur: 'Urdu' };
             
-            // Create temp canvas with text
             const temp = document.createElement('canvas');
             const tw = parseInt(bitmapWidthInput.value) || 128;
             const th = parseInt(bitmapHeightInput.value) || 64;
@@ -527,68 +633,58 @@
             temp.height = th;
             const tCtx = temp.getContext('2d');
             
-            // Clear - white background
             tCtx.fillStyle = '#ffffff';
             tCtx.fillRect(0, 0, tw, th);
             
-            // Get text size from slider
-            let fontSize = parseInt(textSizeRange.value) || 64;
-            const fontFamily = fontSelect.value || 'Arial, Helvetica, sans-serif';
+            let desiredSize = parseInt(textSizeRange.value) || 64;
+            const fontFamily = fontSelect.value || 'Noto Sans Bengali, sans-serif';
             
-            // Auto-fit if text is too long - dynamic sizing
-            let testSize = fontSize;
-            tCtx.font = `bold ${testSize}px ${fontFamily}`;
-            let metrics = tCtx.measureText(text);
-            let maxWidth = tw * 0.92;
-            let maxHeight = th * 0.85;
+            tCtx.font = `bold ${desiredSize}px ${fontFamily}`;
             
-            // Adjust size to fit width
-            while (metrics.width > maxWidth && testSize > 8) {
-                testSize -= 2;
-                tCtx.font = `bold ${testSize}px ${fontFamily}`;
-                metrics = tCtx.measureText(text);
-            }
-            
-            // Check height for multi-line
             const lines = text.split('\n');
-            if (lines.length > 1) {
-                const lineHeight = testSize * 1.2;
-                const totalHeight = lines.length * lineHeight;
-                while (totalHeight > maxHeight && testSize > 8) {
-                    testSize -= 2;
-                    const lh = testSize * 1.2;
-                    if (lines.length * lh <= maxHeight) break;
-                }
+            let maxLineWidth = 0;
+            lines.forEach(line => {
+                const m = tCtx.measureText(line);
+                if (m.width > maxLineWidth) maxLineWidth = m.width;
+            });
+            
+            let maxWidth = tw * 0.92;
+            let actualSize = desiredSize;
+            
+            while ((maxLineWidth > maxWidth || (lines.length > 1 && lines.length * actualSize * 1.2 > th * 0.85)) && actualSize > 8) {
+                actualSize -= 1;
+                tCtx.font = `bold ${actualSize}px ${fontFamily}`;
+                maxLineWidth = 0;
+                lines.forEach(line => {
+                    const m = tCtx.measureText(line);
+                    if (m.width > maxLineWidth) maxLineWidth = m.width;
+                });
             }
             
-            fontSize = testSize;
+            sizeDisplay.textContent = actualSize + 'px';
+            sizeDisplay2.textContent = actualSize + 'px';
             
-            // Set final font
-            tCtx.font = `bold ${fontSize}px ${fontFamily}`;
+            tCtx.font = `bold ${actualSize}px ${fontFamily}`;
             tCtx.textAlign = 'center';
             tCtx.textBaseline = 'middle';
             tCtx.fillStyle = '#000000';
             
-            // Handle multi-line text
             if (lines.length === 1) {
                 tCtx.fillText(text, tw/2, th/2);
             } else {
-                const lineHeight = fontSize * 1.2;
+                const lineHeight = actualSize * 1.2;
                 const totalHeight = lines.length * lineHeight;
-                const startY = (th - totalHeight) / 2 + fontSize/2;
+                const startY = (th - totalHeight) / 2 + actualSize/2;
                 lines.forEach((line, i) => {
                     tCtx.fillText(line, tw/2, startY + i * lineHeight);
                 });
             }
             
-            // Create image from canvas
             originalImage = new Image();
             originalImage.onload = () => {
                 srcImageDisplay.src = originalImage.src;
                 cropToggleBtn.disabled = true;
                 cropMetrics = { top: 0, left: 0, width: 100, height: 100 };
-                // Update display
-                sizeDisplay.textContent = fontSize + 'px';
                 executeRenderLoopEngine();
             };
             originalImage.src = temp.toDataURL();
@@ -792,7 +888,6 @@
             ctx.drawImage(sourceAsset, sX, sY, sW, sH, 0, 0, tw, th);
             ctx.restore();
 
-            // Quantization + invert
             const imgData = ctx.getImageData(0, 0, tw, th);
             const d = imgData.data;
             const invert = !pixelToggle.checked;
@@ -803,13 +898,19 @@
                 d[i] = col; d[i+1] = col; d[i+2] = col; d[i+3] = 255;
             }
             ctx.putImageData(imgData, 0, 0);
+            
+            // Store array data for full code generation
+            currentArrayData = parseCanvasBytesToHexRowString(tw, th, threshold);
         }
 
-        // ========== CODE GENERATOR ==========
+        // ========== CODE GENERATION ==========
         function generateHardwareOutputCode() {
             if (isCropMode) disableCropModeUI();
             if (!originalImage && gifFramesData.length === 0) {
-                codeBox.value = "// Load an asset first!"; switchTab('code'); return;
+                codeBox.value = "// Load an asset first!"; 
+                fullCodeBox.value = "// Load an asset first!";
+                switchTab('code'); 
+                return;
             }
             
             if (originalImage) renderFrameToTargetResolution(originalImage);
@@ -824,7 +925,7 @@
             if (exportSourceIsGif) totalFrames = gifFramesData.length;
             else if (exportSourceIsFX) totalFrames = 4;
 
-            let finalOutputString = `/*\n * PixelForge Generated Asset\n * Size: ${tw}x${th}\n */\n\n`;
+            let arrayOutput = '';
             let generatedArrayTableNames = [];
             clearInterval(activeRenderPlaybackInterval);
 
@@ -838,16 +939,76 @@
                 }
                 let currentFrameVarName = (totalFrames === 1) ? varName : `${varName}_frame_${f}`;
                 generatedArrayTableNames.push(currentFrameVarName);
-                finalOutputString += `static const uint8_t PROGMEM ${currentFrameVarName}[] = {\n  `;
-                finalOutputString += parseCanvasBytesToHexRowString(tw, th, threshold);
-                finalOutputString += "\n};\n\n";
+                arrayOutput += `static const uint8_t PROGMEM ${currentFrameVarName}[] = {\n  `;
+                const hexData = parseCanvasBytesToHexRowString(tw, th, threshold);
+                arrayOutput += hexData;
+                arrayOutput += "\n};\n\n";
             }
+            
+            let animTable = '';
             if (totalFrames > 1) {
-                finalOutputString += `static const uint8_t* const ${varName}_Anim[] PROGMEM = {\n  `;
-                finalOutputString += generatedArrayTableNames.join(", ") + "\n};";
+                animTable = `// Animation frame lookup table\n`;
+                animTable += `static const uint8_t* const ${varName}_Anim[] PROGMEM = {\n  `;
+                animTable += generatedArrayTableNames.join(", ") + "\n};\n";
             }
-            codeBox.value = finalOutputString;
-            switchTab('code');
+
+            // Build full code
+            const fullCode = `/*
+ * PixelForge Generated Asset - Full Arduino/ESP32 Code
+ * Size: ${tw}x${th} | Frames: ${totalFrames}
+ * Generated: ${new Date().toLocaleString()}
+ */
+
+#include <SPI.h>
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+
+// Display configuration
+#define SCREEN_WIDTH ${tw}
+#define SCREEN_HEIGHT ${th}
+#define OLED_ADDRESS 0x3C
+#define OLED_RESET -1
+
+// Initialize display
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+
+// ============ BITMAP DATA ============
+${arrayOutput}${animTable}
+
+void setup() {
+  Serial.begin(115200);
+  
+  // Initialize OLED
+  if(!display.begin(SSD1306_SWITCHCAPVCC, OLED_ADDRESS)) {
+    Serial.println("SSD1306 allocation failed");
+    for(;;);
+  }
+  
+  display.clearDisplay();
+  display.display();
+  delay(100);
+  
+  Serial.println("Display initialized!");
+}
+
+void loop() {
+  display.clearDisplay();
+  
+  // Draw the bitmap${totalFrames > 1 ? ' (cycling through frames)' : ''}
+  ${totalFrames > 1 ? `static int frameIndex = 0;
+  display.drawBitmap(0, 0, ${varName}_Anim[frameIndex], SCREEN_WIDTH, SCREEN_HEIGHT, 1);
+  frameIndex = (frameIndex + 1) % ${totalFrames};` : `display.drawBitmap(0, 0, ${varName}, SCREEN_WIDTH, SCREEN_HEIGHT, 1);`}
+  
+  display.display();
+  delay(${totalFrames > 1 ? '100' : '2000'});
+}`;
+
+            // Update both code boxes
+            codeBox.value = `// Bitmap data only (${tw}x${th})\n\n${arrayOutput}${animTable}`;
+            fullCodeBox.value = fullCode;
+            
+            switchTab('fullCode');
             executeRenderLoopEngine();
         }
 
@@ -951,30 +1112,50 @@
                 }
             });
         });
+
         function switchTab(tabName) {
-            if (tabName === 'preview') { tabPreview.classList.add('active'); tabCode.classList.remove('active'); previewWrapper.style.display = 'flex'; codeWrapper.style.display = 'none'; }
-            else { tabCode.classList.add('active'); tabPreview.classList.remove('active'); previewWrapper.style.display = 'none'; codeWrapper.style.display = 'flex'; }
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            previewWrapper.style.display = 'none';
+            codeWrapper.style.display = 'none';
+            fullCodeWrapper.style.display = 'none';
+            
+            if (tabName === 'preview') {
+                tabPreview.classList.add('active');
+                previewWrapper.style.display = 'flex';
+            } else if (tabName === 'code') {
+                tabCode.classList.add('active');
+                codeWrapper.style.display = 'flex';
+            } else if (tabName === 'fullCode') {
+                tabFullCode.classList.add('active');
+                fullCodeWrapper.style.display = 'flex';
+            }
         }
 
-        // ========== EVENTS - ALL AUTO-RENDER ==========
-        // Text input - render on every change with debounce
+        // ========== EVENTS ==========
         textInput.addEventListener('input', () => {
             charCount.textContent = `${textInput.value.length} characters`;
             if (currentMode === 'text') scheduleRender();
         });
 
-        // Text size - render on change
-        textSizeRange.addEventListener('input', () => {
-            sizeDisplay.textContent = textSizeRange.value + 'px';
-            if (currentMode === 'text') scheduleRender();
+        textSizeRange.addEventListener('input', function() {
+            const val = this.value;
+            sizeDisplay.textContent = val + 'px';
+            sizeDisplay2.textContent = val + 'px';
+            if (currentMode === 'text') {
+                if (renderTimeout) clearTimeout(renderTimeout);
+                renderTimeout = setTimeout(() => {
+                    if (textInput.value.trim()) {
+                        renderTextToBitmapDynamic();
+                    }
+                    renderTimeout = null;
+                }, 50);
+            }
         });
 
-        // Font select - render on change
         fontSelect.addEventListener('change', () => {
             if (currentMode === 'text') scheduleRender();
         });
 
-        // Width/Height - render on change
         bitmapWidthInput.addEventListener('input', () => { 
             if (originalImage) executeRenderLoopEngine();
             else if (currentMode === 'text') scheduleRender();
@@ -984,37 +1165,43 @@
             else if (currentMode === 'text') scheduleRender();
         });
 
-        // Threshold - render on change
         thresholdRange.addEventListener('input', () => { 
             if (originalImage) executeRenderLoopEngine();
             else if (currentMode === 'text') scheduleRender();
         });
 
-        // Animation - render on change
         animTypeSelect.addEventListener('change', () => { 
             if (originalImage) executeRenderLoopEngine();
         });
 
-        // Pixel invert - render on change
         pixelToggle.addEventListener('change', () => { 
             if (originalImage) executeRenderLoopEngine();
         });
 
-        // Generate code button
         generateCodeBtn.addEventListener('click', generateHardwareOutputCode);
         
-        // Tab switching
         tabPreview.addEventListener('click', () => switchTab('preview'));
         tabCode.addEventListener('click', () => switchTab('code'));
+        tabFullCode.addEventListener('click', () => switchTab('fullCode'));
         
-        // Copy button
         copyBtn.addEventListener('click', () => {
             codeBox.select(); document.execCommand('copy');
             const cached = copyBtn.textContent; copyBtn.textContent = '✅ Copied!';
             setTimeout(() => copyBtn.textContent = cached, 2000);
         });
         
-        // Theme toggle
+        copyFullCodeBtn.addEventListener('click', () => {
+            fullCodeBox.select(); document.execCommand('copy');
+            const cached = copyFullCodeBtn.textContent; copyFullCodeBtn.textContent = '✅ Copied!';
+            setTimeout(() => copyFullCodeBtn.textContent = cached, 2000);
+        });
+        
+        copyFullCodeBtn2.addEventListener('click', () => {
+            fullCodeBox.select(); document.execCommand('copy');
+            const cached = copyFullCodeBtn2.textContent; copyFullCodeBtn2.textContent = '✅ Copied!';
+            setTimeout(() => copyFullCodeBtn2.textContent = cached, 2000);
+        });
+        
         themeToggle.addEventListener('click', () => {
             if (document.documentElement.getAttribute('data-theme') === 'light') document.documentElement.removeAttribute('data-theme');
             else document.documentElement.setAttribute('data-theme', 'light');
@@ -1025,11 +1212,12 @@
         workspaceContainer.style.display = 'none';
         charCount.textContent = '0 characters';
         sizeDisplay.textContent = textSizeRange.value + 'px';
+        sizeDisplay2.textContent = textSizeRange.value + 'px';
         
         // Initial demo text
         setTimeout(() => {
             if (currentMode === 'text') {
-                textInput.value = 'Hello World\nनमस्ते বিশ্ব';
+                textInput.value = 'Hello World\nনমস্কার বিশ্ব';
                 charCount.textContent = textInput.value.length + ' characters';
                 scheduleRender();
             }
