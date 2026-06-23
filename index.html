@@ -283,27 +283,50 @@
             box-shadow: 0 0 10px #ef4444;
         }
 
-        /* Cursor animation styles */
-        .cursor-blink {
-            animation: cursorBlink 0.7s step-end infinite;
+        /* Color picker row */
+        .color-picker-row {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
         }
-        @keyframes cursorBlink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0; }
+        .color-picker-row .control-group {
+            flex: 1;
+            min-width: 120px;
         }
-
-        /* Typewriter effect - will be applied via JS */
-        .typewriter-text {
-            overflow: hidden;
-            white-space: nowrap;
-            display: inline-block;
+        .color-picker-row label {
+            font-size: 0.75rem;
+        }
+        .color-picker-row input[type="color"] {
+            width: 100%;
+            height: 35px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: var(--inner-bg);
+            cursor: pointer;
+        }
+        .color-preview-box {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: var(--inner-bg);
+            font-size: 0.7rem;
+        }
+        .color-preview-box .color-swatch {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            border: 1px solid var(--border);
         }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/omggif@1.0.10/omggif.min.js"></script>
 </head>
 <body>
     <header>
-        <div><h1>PixelForge Animation Studio <span class="live-badge">⚡ LIVE</span></h1><p>5 Languages · Typewriter · Open/Close · Timeline · ZIP</p></div>
+        <div><h1>PixelForge Animation Studio <span class="live-badge">⚡ LIVE</span></h1><p>Color Picker · Typewriter · Open/Close · Timeline · ZIP</p></div>
         <div style="display:flex; gap:0.5rem; align-items:center;">
             <button class="btn-theme" id="themeToggle" style="background: var(--bg-card); border: 1px solid var(--border); color: var(--text); padding: 0.5rem 1rem; border-radius: 20px; cursor: pointer;">🌓 Theme</button>
             <button class="btn btn-secondary" id="exportZipBtn" style="padding:0.5rem 1rem; font-size:0.8rem;">📦 ZIP Export</button>
@@ -408,7 +431,30 @@
                     </select>
                 </div>
 
-                <!-- Animation Toggle (only toggles animation, NOT background) -->
+                <!-- Color Pickers -->
+                <div class="control-group">
+                    <label>🎨 Custom Colors</label>
+                    <div class="color-picker-row">
+                        <div class="control-group">
+                            <label>🟦 Background</label>
+                            <input type="color" id="bgColorPicker" value="#ffffff">
+                            <div class="color-preview-box">
+                                <span class="color-swatch" id="bgColorSwatch" style="background:#ffffff;"></span>
+                                <span id="bgColorHex">#ffffff</span>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label>🟥 Item/Text</label>
+                            <input type="color" id="fgColorPicker" value="#000000">
+                            <div class="color-preview-box">
+                                <span class="color-swatch" id="fgColorSwatch" style="background:#000000;"></span>
+                                <span id="fgColorHex">#000000</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Animation Toggle -->
                 <div class="control-group" style="flex-direction:row; align-items:center; gap:1rem; flex-wrap:wrap;">
                     <div class="anim-toggle-group">
                         <label>
@@ -417,7 +463,7 @@
                             <span class="toggle-indicator on" id="animToggleIndicator"></span>
                         </label>
                     </div>
-                    <span style="font-size:0.7rem; color:var(--text-muted);">Toggle animation ON/OFF (background stays same)</span>
+                    <span style="font-size:0.7rem; color:var(--text-muted);">Toggle animation ON/OFF</span>
                 </div>
 
                 <!-- TIMELINE -->
@@ -628,6 +674,12 @@
         const exportZipBtn = document.getElementById('exportZipBtn');
         const animToggle = document.getElementById('animToggle');
         const animToggleIndicator = document.getElementById('animToggleIndicator');
+        const bgColorPicker = document.getElementById('bgColorPicker');
+        const fgColorPicker = document.getElementById('fgColorPicker');
+        const bgColorSwatch = document.getElementById('bgColorSwatch');
+        const fgColorSwatch = document.getElementById('fgColorSwatch');
+        const bgColorHex = document.getElementById('bgColorHex');
+        const fgColorHex = document.getElementById('fgColorHex');
 
         let originalImage = null;
         let gifFramesData = [];
@@ -645,23 +697,51 @@
         let typewriterText = '';
         let typewriterIndex = 0;
         let typewriterInterval = null;
-        let openCloseState = 'closed'; // 'closed' or 'open'
+        let openCloseState = 'closed';
         let openCloseProgress = 0;
+        let isTypewriterComplete = false;
+
+        // User colors
+        let userBgColor = '#ffffff';
+        let userFgColor = '#000000';
 
         // Timeline state
         let timelineFramesData = [];
         let selectedFrameIndex = 0;
+
+        // ========== COLOR PICKER ==========
+        bgColorPicker.addEventListener('input', function() {
+            userBgColor = this.value;
+            bgColorSwatch.style.background = userBgColor;
+            bgColorHex.textContent = userBgColor;
+            if (originalImage && isAnimActive) {
+                clearInterval(activeRenderPlaybackInterval);
+                executeRenderLoopEngine();
+            } else if (originalImage) {
+                renderFrameToTargetResolution(originalImage);
+            }
+        });
+
+        fgColorPicker.addEventListener('input', function() {
+            userFgColor = this.value;
+            fgColorSwatch.style.background = userFgColor;
+            fgColorHex.textContent = userFgColor;
+            if (originalImage && isAnimActive) {
+                clearInterval(activeRenderPlaybackInterval);
+                executeRenderLoopEngine();
+            } else if (originalImage) {
+                renderFrameToTargetResolution(originalImage);
+            }
+        });
 
         // ========== ANIMATION TOGGLE ==========
         animToggle.addEventListener('change', function() {
             isAnimActive = this.checked;
             if (isAnimActive) {
                 animToggleIndicator.className = 'toggle-indicator on';
-                // Resume animation
                 if (originalImage) executeRenderLoopEngine();
             } else {
                 animToggleIndicator.className = 'toggle-indicator off';
-                // Pause animation - show static frame
                 clearInterval(activeRenderPlaybackInterval);
                 if (originalImage) renderFrameToTargetResolution(originalImage);
             }
@@ -808,7 +888,7 @@
             const len = text.length;
             if (len === 0) return frames;
             for (let i = 0; i < totalFrames; i++) {
-                const progress = i / totalFrames;
+                const progress = (i + 1) / totalFrames;
                 const charCount = Math.ceil(progress * len);
                 frames.push(text.substring(0, Math.min(charCount, len)));
             }
@@ -819,7 +899,6 @@
             const frames = [];
             for (let i = 0; i < totalFrames; i++) {
                 const progress = i / totalFrames;
-                // Open: 0->1, Close: 1->0
                 const val = Math.sin(progress * Math.PI);
                 frames.push(val);
             }
@@ -862,7 +941,8 @@
             temp.height = th;
             const tCtx = temp.getContext('2d');
             
-            tCtx.fillStyle = '#ffffff';
+            // Use user colors
+            tCtx.fillStyle = userBgColor;
             tCtx.fillRect(0, 0, tw, th);
             
             let desiredSize = parseInt(textSizeRange.value) || 64;
@@ -896,7 +976,7 @@
             tCtx.font = `bold ${actualSize}px ${fontFamily}`;
             tCtx.textAlign = 'center';
             tCtx.textBaseline = 'middle';
-            tCtx.fillStyle = '#000000';
+            tCtx.fillStyle = userFgColor;
             
             if (lines.length === 1) {
                 tCtx.fillText(text, tw/2, th/2);
@@ -912,6 +992,7 @@
             // Store original text for typewriter
             typewriterText = text;
             typewriterIndex = 0;
+            isTypewriterComplete = false;
             
             originalImage = new Image();
             originalImage.onload = () => {
@@ -1051,7 +1132,12 @@
             const temp = document.createElement('canvas');
             temp.width = 256; temp.height = 256;
             const tCtx = temp.getContext('2d');
-            tCtx.font = "180px sans-serif"; tCtx.textAlign = "center"; tCtx.textBaseline = "middle";
+            tCtx.fillStyle = userBgColor;
+            tCtx.fillRect(0, 0, 256, 256);
+            tCtx.font = "180px sans-serif"; 
+            tCtx.textAlign = "center"; 
+            tCtx.textBaseline = "middle";
+            tCtx.fillStyle = userFgColor;
             tCtx.fillText(em, 128, 135);
             originalImage = new Image();
             originalImage.onload = () => {
@@ -1064,7 +1150,7 @@
             originalImage.src = temp.toDataURL();
         }
 
-        // ========== RENDER ENGINE ==========
+        // ========== RENDER ENGINE - FIXED FOR SLIDE UP ==========
         function executeRenderLoopEngine() {
             clearInterval(activeRenderPlaybackInterval);
             if (!isAnimActive) {
@@ -1083,21 +1169,26 @@
 
             if (!originalImage && gifFramesData.length === 0) return;
 
-            // Handle Typewriter and Open/Close specially
+            // Handle Typewriter
             if (motionFX === 'typewriter' && currentMode === 'text' && originalImage) {
                 const text = typewriterText || textInput.value.trim();
                 if (text) {
-                    const totalFrames = Math.min(text.length, 20); // max 20 frames for speed
+                    const totalFrames = Math.min(text.length, 30);
                     const typewriterFrames = getTypewriterFrames(text, totalFrames);
                     if (typewriterFrames.length > 0) {
                         activePlaybackIndex = 0;
+                        isTypewriterComplete = false;
                         activeRenderPlaybackInterval = setInterval(() => {
                             const frameText = typewriterFrames[activePlaybackIndex % typewriterFrames.length];
-                            // Render text with cursor
-                            renderTextWithCursor(frameText, text);
+                            const isLastFrame = (activePlaybackIndex >= typewriterFrames.length - 1);
+                            if (isLastFrame) {
+                                isTypewriterComplete = true;
+                            }
+                            const showCursor = !isTypewriterComplete;
+                            renderTypewriterFrame(frameText, text, showCursor);
                             activePlaybackIndex = (activePlaybackIndex + 1) % typewriterFrames.length;
-                            if (activePlaybackIndex === 0) {
-                                // Reset with cursor blink
+                            if (activePlaybackIndex === 0 && isTypewriterComplete) {
+                                isTypewriterComplete = false;
                             }
                         }, animSpeed);
                         return;
@@ -1105,6 +1196,7 @@
                 }
             }
 
+            // Handle Open/Close
             if (motionFX === 'openClose' && originalImage) {
                 const totalFrames = 8;
                 const openCloseValues = getOpenCloseFrames(totalFrames);
@@ -1152,18 +1244,20 @@
         }
 
         // ========== TYPEWRITER RENDER ==========
-        function renderTextWithCursor(displayText, fullText) {
+        function renderTypewriterFrame(displayText, fullText, showCursor) {
             const tw = parseInt(bitmapWidthInput.value) || 128;
             const th = parseInt(bitmapHeightInput.value) || 64;
             const threshold = parseInt(thresholdRange.value);
             thresholdLabel.textContent = `Threshold: ${threshold}`;
             canvas.width = tw; canvas.height = th;
-            ctx.fillStyle = "#000000"; ctx.fillRect(0, 0, tw, th);
-
+            
+            // First draw the frame with user colors
             const temp = document.createElement('canvas');
             temp.width = tw; temp.height = th;
             const tCtx = temp.getContext('2d');
-            tCtx.fillStyle = '#ffffff';
+            
+            // Fill background with user color
+            tCtx.fillStyle = userBgColor;
             tCtx.fillRect(0, 0, tw, th);
             
             let actualSize = parseInt(textSizeRange.value) || 64;
@@ -1171,22 +1265,24 @@
             tCtx.font = `bold ${actualSize}px ${fontFamily}`;
             tCtx.textAlign = 'center';
             tCtx.textBaseline = 'middle';
-            tCtx.fillStyle = '#000000';
+            tCtx.fillStyle = userFgColor;
             
             const lines = displayText.split('\n');
             if (lines.length === 1) {
-                const textWithCursor = displayText + '█';
+                const textWithCursor = showCursor ? displayText + '█' : displayText;
                 tCtx.fillText(textWithCursor, tw/2, th/2);
             } else {
                 const lineHeight = actualSize * 1.2;
                 const totalHeight = lines.length * lineHeight;
                 const startY = (th - totalHeight) / 2 + actualSize/2;
                 lines.forEach((line, i) => {
-                    const textWithCursor = (i === lines.length - 1) ? line + '█' : line;
+                    const isLastLine = (i === lines.length - 1);
+                    const textWithCursor = (isLastLine && showCursor) ? line + '█' : line;
                     tCtx.fillText(textWithCursor, tw/2, startY + i * lineHeight);
                 });
             }
 
+            // Now apply threshold and invert
             const imgData = tCtx.getImageData(0, 0, tw, th);
             const d = imgData.data;
             const invert = !pixelToggle.checked;
@@ -1206,9 +1302,15 @@
             const threshold = parseInt(thresholdRange.value);
             thresholdLabel.textContent = `Threshold: ${threshold}`;
             canvas.width = tw; canvas.height = th;
-            ctx.fillStyle = "#000000"; ctx.fillRect(0, 0, tw, th);
+            
+            // First create the frame with user colors
+            const temp = document.createElement('canvas');
+            temp.width = tw; temp.height = th;
+            const tCtx = temp.getContext('2d');
+            
+            tCtx.fillStyle = userBgColor;
+            tCtx.fillRect(0, 0, tw, th);
 
-            // progress: 0 = closed, 1 = open
             const scaleX = Math.max(0.05, progress);
             const scaleY = Math.max(0.05, 1 - (1 - progress) * 0.5);
 
@@ -1217,14 +1319,15 @@
             const sW = (cropMetrics.width / 100) * sourceAsset.width;
             const sH = (cropMetrics.height / 100) * sourceAsset.height;
 
-            ctx.save();
-            ctx.translate(tw/2, th/2);
-            ctx.scale(scaleX, scaleY);
-            ctx.translate(-tw/2, -th/2);
-            ctx.drawImage(sourceAsset, sX, sY, sW, sH, 0, 0, tw, th);
-            ctx.restore();
+            tCtx.save();
+            tCtx.translate(tw/2, th/2);
+            tCtx.scale(scaleX, scaleY);
+            tCtx.translate(-tw/2, -th/2);
+            tCtx.drawImage(sourceAsset, sX, sY, sW, sH, 0, 0, tw, th);
+            tCtx.restore();
 
-            const imgData = ctx.getImageData(0, 0, tw, th);
+            // Apply threshold and invert
+            const imgData = tCtx.getImageData(0, 0, tw, th);
             const d = imgData.data;
             const invert = !pixelToggle.checked;
             for (let i = 0; i < d.length; i += 4) {
@@ -1236,7 +1339,7 @@
             ctx.putImageData(imgData, 0, 0);
         }
 
-        // ========== STANDARD RENDER ==========
+        // ========== STANDARD RENDER - FIXED FOR SLIDE ==========
         function renderFrameToTargetResolution(sourceAsset, fxSpecs = null) {
             if (!sourceAsset) return;
             if (isCropMode) {
@@ -1253,14 +1356,22 @@
             const threshold = parseInt(thresholdRange.value);
             thresholdLabel.textContent = `Threshold: ${threshold}`;
             canvas.width = tw; canvas.height = th;
-            ctx.fillStyle = "#000000"; ctx.fillRect(0, 0, tw, th);
+            
+            // Create a temporary canvas with user colors
+            const temp = document.createElement('canvas');
+            temp.width = tw; temp.height = th;
+            const tCtx = temp.getContext('2d');
+            
+            // Fill background with user color
+            tCtx.fillStyle = userBgColor;
+            tCtx.fillRect(0, 0, tw, th);
 
             const sX = (cropMetrics.left / 100) * sourceAsset.width;
             const sY = (cropMetrics.top / 100) * sourceAsset.height;
             const sW = (cropMetrics.width / 100) * sourceAsset.width;
             const sH = (cropMetrics.height / 100) * sourceAsset.height;
 
-            ctx.save();
+            tCtx.save();
             
             if (fxSpecs) {
                 const step = fxSpecs.step;
@@ -1299,19 +1410,20 @@
                     default: break;
                 }
                 
-                ctx.translate(tw/2, th/2);
-                ctx.translate(tx, ty);
-                ctx.scale(scX, scY);
-                ctx.rotate(rot);
-                if (skewX !== 0 || skewY !== 0) ctx.transform(1, skewY, skewX, 1, 0, 0);
-                ctx.globalAlpha = alpha;
-                ctx.translate(-tw/2, -th/2);
+                tCtx.translate(tw/2, th/2);
+                tCtx.translate(tx, ty);
+                tCtx.scale(scX, scY);
+                tCtx.rotate(rot);
+                if (skewX !== 0 || skewY !== 0) tCtx.transform(1, skewY, skewX, 1, 0, 0);
+                tCtx.globalAlpha = alpha;
+                tCtx.translate(-tw/2, -th/2);
             }
 
-            ctx.drawImage(sourceAsset, sX, sY, sW, sH, 0, 0, tw, th);
-            ctx.restore();
+            tCtx.drawImage(sourceAsset, sX, sY, sW, sH, 0, 0, tw, th);
+            tCtx.restore();
 
-            const imgData = ctx.getImageData(0, 0, tw, th);
+            // Now apply threshold and invert
+            const imgData = tCtx.getImageData(0, 0, tw, th);
             const d = imgData.data;
             const invert = !pixelToggle.checked;
             for (let i = 0; i < d.length; i += 4) {
@@ -1343,7 +1455,7 @@
             if (gifFramesData.length > 0) totalFrames = gifFramesData.length;
             else if (useTimeline) totalFrames = timelineFramesData.length;
             else if (motionFX !== 'none' && motionFX !== 'typewriter' && motionFX !== 'openClose') totalFrames = 4;
-            else if (motionFX === 'typewriter') totalFrames = Math.min(typewriterText.length, 20);
+            else if (motionFX === 'typewriter') totalFrames = Math.min(typewriterText.length, 30);
             else if (motionFX === 'openClose') totalFrames = 8;
             
             clearInterval(activeRenderPlaybackInterval);
@@ -1366,7 +1478,7 @@
                     const text = typewriterText || textInput.value.trim();
                     const frames = getTypewriterFrames(text, totalFrames);
                     const frameText = frames[f % frames.length] || text;
-                    renderTextWithCursor(frameText, text);
+                    renderTypewriterFrame(frameText, text, false);
                 } else if (motionFX === 'openClose') {
                     const values = getOpenCloseFrames(totalFrames);
                     renderOpenCloseFrame(source, values[f % values.length]);
@@ -1396,6 +1508,7 @@
  * PixelForge Generated Asset
  * Size: ${tw}x${th} | Frames: ${totalFrames} | Speed: ${animSpeed}ms
  * Animation: ${motionFX}
+ * Colors: BG=${userBgColor}, FG=${userFgColor}
  * Generated: ${new Date().toLocaleString()}
  */
 
@@ -1453,6 +1566,7 @@ Asset: ${varName}
 Size: ${tw}x${th}
 Frames: ${timelineFramesData.length || 1}
 Animation Speed: ${animSpeed}ms
+Colors: BG=${userBgColor}, FG=${userFgColor}
 Generated: ${new Date().toLocaleString()}
 ========================
 `;
@@ -1492,7 +1606,7 @@ Generated: ${new Date().toLocaleString()}
             if (gifFramesData.length > 0) totalFrames = gifFramesData.length;
             else if (useTimeline) totalFrames = timelineFramesData.length;
             else if (motionFX !== 'none' && motionFX !== 'typewriter' && motionFX !== 'openClose') totalFrames = 4;
-            else if (motionFX === 'typewriter') totalFrames = Math.min(typewriterText.length, 20);
+            else if (motionFX === 'typewriter') totalFrames = Math.min(typewriterText.length, 30);
             else if (motionFX === 'openClose') totalFrames = 8;
 
             let arrayOutput = '';
@@ -1514,7 +1628,7 @@ Generated: ${new Date().toLocaleString()}
                     const text = typewriterText || textInput.value.trim();
                     const frames = getTypewriterFrames(text, totalFrames);
                     const frameText = frames[f % frames.length] || text;
-                    renderTextWithCursor(frameText, text);
+                    renderTypewriterFrame(frameText, text, false);
                 } else if (motionFX === 'openClose') {
                     const values = getOpenCloseFrames(totalFrames);
                     renderOpenCloseFrame(source, values[f % values.length]);
@@ -1543,6 +1657,7 @@ Generated: ${new Date().toLocaleString()}
  * PixelForge Generated Asset
  * Size: ${tw}x${th} | Frames: ${totalFrames} | Speed: ${animSpeed}ms
  * Animation: ${motionFX}
+ * Colors: BG=${userBgColor}, FG=${userFgColor}
  * Generated: ${new Date().toLocaleString()}
  */
 
@@ -1780,7 +1895,6 @@ void loop() {
         });
         
         themeToggle.addEventListener('click', () => {
-            // ONLY toggles theme, NOT animation
             if (document.documentElement.getAttribute('data-theme') === 'light') {
                 document.documentElement.removeAttribute('data-theme');
             } else {
