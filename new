@@ -1,0 +1,2108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PixelForge Studio · OLED Asset Compiler</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
+
+:root{
+  --bg:#0a0d09;
+  --panel:#10140d;
+  --panel-raised:#161b12;
+  --line:#232b1d;
+  --line-bright:#34402a;
+  --phosphor:#bdf2a8;
+  --phosphor-dim:#7fa869;
+  --signal:#39ff6a;
+  --amber:#ff9a3d;
+  --amber-dim:#a86423;
+  --danger:#ff5d5d;
+  --text:#e7f0e0;
+  --text-mute:#6d7a63;
+  --mono:'IBM Plex Mono', ui-monospace, monospace;
+  --sans:'IBM Plex Sans', system-ui, sans-serif;
+  --radius:10px;
+}
+[data-theme="light"]{
+  --bg:#eef0e8;
+  --panel:#ffffff;
+  --panel-raised:#f7f8f3;
+  --line:#d8ddcd;
+  --line-bright:#b9c2a7;
+  --phosphor:#2c5a1e;
+  --phosphor-dim:#5a7a4a;
+  --signal:#1f8f3f;
+  --amber:#c5660f;
+  --amber-dim:#a86423;
+  --text:#181d12;
+  --text-mute:#6f7a62;
+}
+*{box-sizing:border-box;margin:0;padding:0;font-family:var(--sans);}
+body{
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  padding:1.5rem;
+  background-image:
+    radial-gradient(circle at 15% 10%, rgba(57,255,106,0.04), transparent 40%),
+    radial-gradient(circle at 85% 90%, rgba(255,154,61,0.03), transparent 40%);
+}
+.shell{max-width:1480px;margin:0 auto;}
+
+/* ===== HEADER ===== */
+header{
+  display:flex;justify-content:space-between;align-items:flex-end;
+  padding-bottom:1.1rem;margin-bottom:1.4rem;border-bottom:1px solid var(--line);
+  flex-wrap:wrap;gap:1rem;
+}
+.brand{display:flex;align-items:center;gap:0.9rem;}
+.brand-mark{
+  width:42px;height:42px;border-radius:8px;background:var(--panel-raised);
+  border:1px solid var(--line-bright);display:flex;align-items:center;justify-content:center;
+  position:relative;flex-shrink:0;
+}
+.brand-mark::before{
+  content:'';width:18px;height:18px;border-radius:3px;
+  background:var(--signal);box-shadow:0 0 12px var(--signal);
+  animation:blink 2.2s ease-in-out infinite;
+}
+@keyframes blink{0%,100%{opacity:1;}48%{opacity:1;}50%{opacity:0.25;}98%{opacity:0.25;}}
+.brand h1{
+  font-family:var(--mono);font-size:1.4rem;font-weight:700;letter-spacing:-0.01em;
+  color:var(--text);
+}
+.brand h1 span{color:var(--signal);}
+.brand p{font-family:var(--mono);font-size:0.72rem;color:var(--text-mute);letter-spacing:0.04em;margin-top:0.15rem;text-transform:uppercase;}
+.header-actions{display:flex;gap:0.6rem;align-items:center;}
+.icon-btn{
+  background:var(--panel-raised);border:1px solid var(--line-bright);color:var(--text);
+  padding:0.55rem 1rem;border-radius:7px;cursor:pointer;font-family:var(--mono);font-size:0.78rem;
+  font-weight:600;display:flex;align-items:center;gap:0.4rem;transition:all .15s;
+}
+.icon-btn:hover{border-color:var(--signal);color:var(--signal);}
+
+/* ===== LAYOUT ===== */
+.workbench{display:grid;grid-template-columns:460px 1fr;gap:1.4rem;}
+@media (max-width:1040px){.workbench{grid-template-columns:1fr;}}
+
+.panel{
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  padding:1.3rem;display:flex;flex-direction:column;gap:1.1rem;
+  position:relative;
+}
+.panel::before{
+  content:'';position:absolute;top:10px;left:10px;width:6px;height:6px;
+  border-radius:50%;background:var(--line-bright);
+}
+.panel-head{
+  display:flex;justify-content:space-between;align-items:center;
+  padding-bottom:0.85rem;border-bottom:1px solid var(--line);
+}
+.panel-head h2{
+  font-family:var(--mono);font-size:0.72rem;font-weight:700;letter-spacing:0.08em;
+  text-transform:uppercase;color:var(--text-mute);display:flex;align-items:center;gap:0.5rem;
+}
+.panel-head h2 .dot{width:6px;height:6px;border-radius:50%;background:var(--signal);}
+.panel-head .meta{font-family:var(--mono);font-size:0.68rem;color:var(--text-mute);}
+
+/* ===== SOURCE TABS ===== */
+.source-tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:0.4rem;}
+.source-tab{
+  padding:0.6rem 0.3rem;text-align:center;font-family:var(--mono);font-size:0.7rem;
+  font-weight:600;cursor:pointer;border-radius:7px;color:var(--text-mute);
+  background:var(--panel-raised);border:1px solid var(--line);transition:all .15s;
+  display:flex;flex-direction:column;align-items:center;gap:0.2rem;
+}
+.source-tab .ic{font-size:1rem;}
+.source-tab.active{background:rgba(57,255,106,0.08);color:var(--signal);border-color:var(--signal);}
+.source-tab:hover:not(.active){border-color:var(--line-bright);}
+.source-panel{display:none;}
+.source-panel.active{display:block;display:flex;flex-direction:column;gap:1rem;}
+
+/* ===== FORM ELEMENTS ===== */
+.field{display:flex;flex-direction:column;gap:0.45rem;}
+.field label{
+  font-family:var(--mono);font-size:0.72rem;font-weight:600;color:var(--text-mute);
+  text-transform:uppercase;letter-spacing:0.03em;display:flex;align-items:center;gap:0.4rem;justify-content:space-between;
+}
+.field label .hint{text-transform:none;font-weight:400;color:var(--text-mute);opacity:0.7;letter-spacing:0;}
+.row{display:flex;gap:0.8rem;}
+.row .field{flex:1;}
+input[type="text"],input[type="number"],select,textarea{
+  background:var(--panel-raised);border:1px solid var(--line);color:var(--text);
+  padding:0.62rem 0.75rem;border-radius:7px;width:100%;font-size:0.88rem;outline:none;
+  font-family:var(--sans);transition:border-color .15s;
+}
+input[type="text"]:focus,input[type="number"]:focus,select:focus,textarea:focus{border-color:var(--signal);}
+textarea{resize:vertical;min-height:64px;font-family:var(--mono);font-size:1.05rem;line-height:1.4;}
+input[type="range"]{width:100%;accent-color:var(--signal);cursor:pointer;height:4px;}
+
+.upload-zone{position:relative;width:100%;}
+.upload-zone input[type="file"]{position:absolute;inset:0;opacity:0;cursor:pointer;}
+.upload-zone-btn{
+  background:var(--panel-raised);border:1.5px dashed var(--line-bright);padding:1.5rem 1rem;
+  border-radius:9px;text-align:center;color:var(--text-mute);font-size:0.82rem;font-weight:500;
+  display:flex;flex-direction:column;align-items:center;gap:0.4rem;transition:border-color .15s;
+}
+.upload-zone:hover .upload-zone-btn{border-color:var(--signal);color:var(--phosphor);}
+.upload-zone-btn .big-ic{font-size:1.6rem;}
+
+.emoji-grid-box{
+  background:var(--panel-raised);border:1px solid var(--line);border-radius:9px;height:150px;
+  overflow-y:auto;padding:0.5rem;display:grid;grid-template-columns:repeat(7,1fr);gap:0.4rem;
+}
+.emoji-item{font-size:1.5rem;text-align:center;cursor:pointer;padding:0.2rem;border-radius:6px;transition:transform .1s;}
+.emoji-item:hover{transform:scale(1.18);}
+.emoji-item.active{background:rgba(57,255,106,0.18);border:1px solid var(--signal);}
+
+.config-panel{
+  background:var(--panel-raised);border:1px solid var(--line);border-radius:9px;
+  padding:1rem;display:none;flex-direction:column;gap:1rem;animation:fadeIn .25s ease-out;
+}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
+.config-panel.show{display:flex;}
+.config-badge{
+  font-family:var(--mono);font-size:0.76rem;color:var(--signal);background:rgba(57,255,106,0.08);
+  padding:0.3rem 0.6rem;border-radius:5px;display:inline-block;border:1px solid rgba(57,255,106,0.25);
+}
+
+.color-row{display:flex;gap:0.8rem;}
+.color-field{flex:1;display:flex;flex-direction:column;gap:0.4rem;}
+input[type="color"]{width:100%;height:34px;border-radius:6px;border:1px solid var(--line);background:var(--panel-raised);cursor:pointer;padding:2px;}
+.color-readout{
+  display:flex;align-items:center;gap:0.5rem;padding:0.3rem 0.5rem;border-radius:5px;
+  border:1px solid var(--line);background:var(--bg);font-family:var(--mono);font-size:0.68rem;color:var(--text-mute);
+}
+.swatch{width:16px;height:16px;border-radius:3px;border:1px solid var(--line-bright);flex-shrink:0;}
+
+/* toggle pill */
+.toggle-pill{
+  display:flex;align-items:center;justify-content:space-between;gap:0.8rem;
+  background:var(--bg);padding:0.5rem 0.8rem;border-radius:8px;border:1px solid var(--line);
+}
+.toggle-pill .tp-label{font-size:0.8rem;font-weight:600;display:flex;align-items:center;gap:0.5rem;}
+.switch{position:relative;width:38px;height:20px;flex-shrink:0;}
+.switch input{opacity:0;width:0;height:0;}
+.switch .slider{
+  position:absolute;inset:0;background:var(--line-bright);border-radius:20px;cursor:pointer;transition:.2s;
+}
+.switch .slider::before{
+  content:'';position:absolute;width:14px;height:14px;left:3px;top:3px;background:var(--text-mute);
+  border-radius:50%;transition:.2s;
+}
+.switch input:checked + .slider{background:rgba(57,255,106,0.25);}
+.switch input:checked + .slider::before{transform:translateX(18px);background:var(--signal);box-shadow:0 0 6px var(--signal);}
+
+/* ===== TIMELINE ===== */
+.timeline-box{background:var(--bg);border-radius:9px;padding:0.7rem;border:1px solid var(--line);}
+.timeline-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:0.55rem;font-family:var(--mono);font-size:0.7rem;color:var(--text-mute);}
+.timeline-strip{display:flex;gap:0.45rem;overflow-x:auto;padding:0.2rem 0.1rem;}
+.frame-item{
+  min-width:54px;padding:0.4rem;background:var(--panel-raised);border-radius:6px;text-align:center;
+  cursor:pointer;border:1.5px solid var(--line);position:relative;transition:all .15s;
+}
+.frame-item.active{border-color:var(--signal);background:rgba(57,255,106,0.1);}
+.frame-item:hover{border-color:var(--line-bright);}
+.frame-number{font-family:var(--mono);font-size:0.62rem;font-weight:700;color:var(--text-mute);display:block;}
+.frame-item.active .frame-number{color:var(--signal);}
+.frame-preview{font-size:1.1rem;display:block;margin:2px 0;}
+.frame-delay{font-family:var(--mono);font-size:0.56rem;color:var(--text-mute);opacity:0.7;}
+.delete-frame{
+  position:absolute;top:-6px;right:-6px;background:var(--danger);color:#fff;border:none;
+  border-radius:50%;width:16px;height:16px;font-size:9px;cursor:pointer;display:none;line-height:16px;
+}
+.frame-item:hover .delete-frame{display:block;}
+.timeline-controls{display:flex;gap:0.4rem;margin-top:0.55rem;flex-wrap:wrap;align-items:center;}
+.mini-btn{
+  padding:0.32rem 0.7rem;font-size:0.68rem;border-radius:5px;border:1px solid var(--line);
+  background:var(--panel-raised);color:var(--text-mute);cursor:pointer;font-family:var(--mono);font-weight:600;
+}
+.mini-btn:hover{border-color:var(--signal);color:var(--signal);}
+.speed-ctl{display:flex;align-items:center;gap:0.5rem;flex:1;min-width:140px;}
+.speed-ctl span{font-family:var(--mono);font-size:0.7rem;color:var(--text-mute);min-width:42px;}
+
+/* ===== BUTTONS ===== */
+.btn{
+  background:var(--signal);color:#06140a;border:none;padding:0.7rem 1.2rem;border-radius:8px;
+  font-weight:700;font-size:0.85rem;cursor:pointer;display:inline-flex;align-items:center;
+  justify-content:center;gap:0.5rem;transition:all .15s;font-family:var(--mono);
+}
+.btn:hover{box-shadow:0 0 16px rgba(57,255,106,0.35);transform:translateY(-1px);}
+.btn:disabled{opacity:0.4;cursor:not-allowed;box-shadow:none;transform:none;}
+.btn-secondary{background:var(--panel-raised);color:var(--text);border:1px solid var(--line-bright);}
+.btn-secondary:hover{box-shadow:none;border-color:var(--signal);color:var(--signal);}
+.btn-amber{background:var(--amber);color:#1c0d00;}
+.btn-amber:hover{box-shadow:0 0 16px rgba(255,154,61,0.35);}
+.btn-crop-active{background:var(--danger) !important;color:#fff !important;}
+.btn-row{display:flex;gap:0.6rem;flex-wrap:wrap;}
+.btn-row > *{flex:1;}
+
+/* ===== PREVIEW / SCREEN ===== */
+.screen-wrap{
+  background:#000;border-radius:12px;border:6px solid var(--panel-raised);
+  outline:1px solid var(--line-bright);min-height:420px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;position:relative;overflow:hidden;
+}
+.screen-wrap::after{
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background:repeating-linear-gradient(0deg, rgba(0,0,0,0.18) 0px, rgba(0,0,0,0.18) 1px, transparent 1px, transparent 3px);
+  mix-blend-mode:multiply;opacity:0.5;
+}
+.screen-status{
+  position:absolute;top:10px;left:12px;display:flex;align-items:center;gap:0.4rem;z-index:5;
+  font-family:var(--mono);font-size:0.62rem;color:var(--signal);text-transform:uppercase;letter-spacing:0.05em;
+}
+.screen-status .led{width:6px;height:6px;border-radius:50%;background:var(--signal);box-shadow:0 0 6px var(--signal);animation:blink 1.8s infinite;}
+.screen-dims{position:absolute;top:10px;right:12px;font-family:var(--mono);font-size:0.62rem;color:var(--text-mute);z-index:5;}
+
+.workspace-inner{position:relative;display:inline-block;}
+#srcImageDisplay,#srcVideoDisplay{max-width:100%;max-height:400px;display:none;user-select:none;-webkit-user-drag:none;}
+#previewCanvas{max-width:100%;max-height:400px;image-rendering:pixelated;display:block;}
+.crop-box-pro{position:absolute;border:1px solid #fff;outline:2000px solid rgba(0,0,0,0.7);cursor:move;display:none;box-shadow:0 0 20px rgba(0,0,0,0.85);}
+.handle-pro{position:absolute;width:10px;height:10px;background:#fff;border:1px solid #000;}
+.h-tl{top:-5px;left:-5px;cursor:nwse-resize;}
+.h-tr{top:-5px;right:-5px;cursor:nesw-resize;}
+.h-bl{bottom:-5px;left:-5px;cursor:nesw-resize;}
+.h-br{bottom:-5px;right:-5px;cursor:nwse-resize;}
+.placeholder-text{color:var(--text-mute);font-size:0.95rem;padding:2rem;text-align:center;font-family:var(--mono);}
+
+.video-scrub-bar{
+  position:absolute;bottom:8px;left:8px;right:8px;z-index:6;display:none;
+  background:rgba(0,0,0,0.55);border-radius:6px;padding:0.4rem 0.6rem;align-items:center;gap:0.5rem;
+}
+.video-scrub-bar.show{display:flex;}
+.video-scrub-bar input[type="range"]{flex:1;accent-color:var(--signal);}
+.video-scrub-bar span{font-family:var(--mono);font-size:0.62rem;color:var(--phosphor);min-width:38px;}
+
+/* ===== TABS (output) ===== */
+.out-tabs{display:flex;gap:0.4rem;}
+.out-tab{
+  padding:0.5rem 1rem;border-radius:8px 8px 0 0;cursor:pointer;background:var(--panel-raised);
+  font-family:var(--mono);font-size:0.76rem;color:var(--text-mute);font-weight:600;border:1px solid var(--line);
+  border-bottom:none;
+}
+.out-tab.active{background:var(--panel);color:var(--signal);border-color:var(--line-bright);}
+
+.code-shell{background:#000;border-radius:0 0 10px 10px;border:1px solid var(--line-bright);flex-grow:1;display:flex;flex-direction:column;overflow:hidden;margin-top:-1px;}
+textarea.code-area{
+  background:transparent;border:none;color:var(--phosphor);font-family:var(--mono);padding:1rem;
+  resize:none;width:100%;height:100%;outline:none;font-size:0.78rem;line-height:1.55;min-height:480px;
+}
+.code-foot{padding:0.7rem 1rem;background:var(--panel-raised);border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:0.5rem;}
+
+.status-line{
+  font-family:var(--mono);font-size:0.78rem;color:var(--signal);font-weight:600;display:none;
+  background:rgba(57,255,106,0.06);border:1px solid rgba(57,255,106,0.2);padding:0.5rem 0.8rem;border-radius:6px;
+}
+.char-count{font-family:var(--mono);font-size:0.68rem;color:var(--text-mute);text-align:right;}
+.size-readout{
+  font-family:var(--mono);min-width:54px;text-align:center;font-weight:700;color:var(--signal);
+  background:var(--bg);padding:2px 8px;border-radius:5px;font-size:0.78rem;border:1px solid var(--line);
+}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/omggif@1.0.10/omggif.min.js"></script>
+</head>
+<body>
+<div class="shell">
+
+<header>
+  <div class="brand">
+    <div class="brand-mark"></div>
+    <div>
+      <h1>PixelForge<span>::Studio</span></h1>
+      <p>OLED bitmap &amp; animation compiler — text · image · sticker · video</p>
+    </div>
+  </div>
+  <div class="header-actions">
+    <button class="icon-btn" id="themeToggle">◐ Display mode</button>
+    <button class="icon-btn" id="exportZipBtn">⇣ Export .zip</button>
+  </div>
+</header>
+
+<div class="workbench">
+
+  <!-- ============ INPUT PANEL ============ -->
+  <div class="panel">
+    <div class="panel-head">
+      <h2><span class="dot"></span>Input source</h2>
+      <span class="meta">auto-render</span>
+    </div>
+
+    <div class="source-tabs">
+      <div class="source-tab active" data-source="text"><span class="ic">✎</span>Text</div>
+      <div class="source-tab" data-source="file"><span class="ic">▣</span>Image</div>
+      <div class="source-tab" data-source="video"><span class="ic">▶</span>Video</div>
+      <div class="source-tab" data-source="emoji"><span class="ic">☺</span>Sticker</div>
+    </div>
+
+    <!-- TEXT -->
+    <div class="source-panel active" id="panel-text">
+      <div class="row">
+        <div class="field">
+          <label>Language</label>
+          <select id="languageSelect">
+            <option value="en">EN — English</option>
+            <option value="hi">HI — हिंदी</option>
+            <option value="bn">BN — বাংলা</option>
+            <option value="ta">TA — தமிழ்</option>
+            <option value="ur">UR — اردو</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Typeface</label>
+          <select id="fontSelect"></select>
+        </div>
+      </div>
+      <div class="field">
+        <label>Message <span class="hint">updates live as you type</span></label>
+        <textarea id="textInput" placeholder="Type here... e.g. Hello / নমস্কার" rows="2"></textarea>
+        <div class="char-count" id="charCount">0 characters</div>
+      </div>
+      <div class="field">
+        <label>Glyph size <span class="size-readout" id="sizeDisplay">64px</span></label>
+        <input type="range" id="textSizeRange" min="8" max="300" value="64" step="1">
+      </div>
+    </div>
+
+    <!-- IMAGE -->
+    <div class="source-panel" id="panel-file">
+      <div class="upload-zone">
+        <input type="file" id="imageLoader" accept="image/*,image/gif" multiple>
+        <div class="upload-zone-btn"><span class="big-ic">⇡</span>Drop images, GIFs, or stickers — multiple files become frames</div>
+      </div>
+    </div>
+
+    <!-- VIDEO -->
+    <div class="source-panel" id="panel-video">
+      <div class="upload-zone">
+        <input type="file" id="videoLoader" accept="video/*">
+        <div class="upload-zone-btn"><span class="big-ic">⇡</span>Drop a video file — frames are sampled automatically</div>
+      </div>
+      <div class="field" id="videoFrameCountField" style="display:none;">
+        <label>Sampled frames <span class="size-readout" id="videoFrameCountDisplay">12</span></label>
+        <input type="range" id="videoFrameCountRange" min="2" max="30" value="12" step="1">
+      </div>
+    </div>
+
+    <!-- EMOJI / STICKER -->
+    <div class="source-panel" id="panel-emoji">
+      <div class="field">
+        <label>Sticker pack</label>
+        <select id="emojiCategorySelect"></select>
+        <div class="emoji-grid-box" id="emojiGrid"></div>
+      </div>
+    </div>
+
+    <!-- DYNAMIC CONFIG -->
+    <div class="config-panel" id="configPanel">
+      <span class="config-badge" id="selectedBadge">Text mode</span>
+
+      <div class="field">
+        <label>Animation style</label>
+        <select id="animType">
+          <option value="none">— Static, no motion</option>
+          <option value="pulse">Pulse — expands &amp; contracts</option>
+          <option value="spin">Spin — rotates 360°</option>
+          <option value="bounce">Bounce — up &amp; down</option>
+          <option value="shake">Shake — left &amp; right</option>
+          <option value="flicker">Flicker — brightness flashes</option>
+          <option value="wave">Wave — undulation</option>
+          <option value="zoom">Zoom — scales in/out</option>
+          <option value="skew">Skew — slant tilt</option>
+          <option value="blink">Blink — vertical squash</option>
+          <option value="morph">Morph — stretch horizontal</option>
+          <option value="glow">Glow — fade in/out</option>
+          <option value="drift">Drift — gentle floating</option>
+          <option value="slideUp">Slide up — enters from bottom</option>
+          <option value="slideDown">Slide down — enters from top</option>
+          <option value="slideLeft">Slide left — enters from right</option>
+          <option value="slideRight">Slide right — enters from left</option>
+          <option value="slideDiagonal">Slide diagonal — from corner</option>
+          <option value="scrollUp">Scroll up — marquee</option>
+          <option value="scrollDown">Scroll down — marquee</option>
+          <option value="scrollLeft">Scroll left — marquee</option>
+          <option value="scrollRight">Scroll right — marquee</option>
+          <option value="vanish">Vanish — fades &amp; shrinks</option>
+          <option value="explode">Explode — bursts outward</option>
+          <option value="implode">Implode — collapses inward</option>
+          <option value="swing">Swing — pendulum motion</option>
+          <option value="tilt">Tilt — rotates back &amp; forth</option>
+          <option value="ripple">Ripple — wave distortion</option>
+          <option value="typewriter">Typewriter — letter by letter</option>
+          <option value="openClose">Open/close — window effect</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Palette</label>
+        <div class="color-row">
+          <div class="color-field">
+            <input type="color" id="bgColorPicker" value="#ffffff">
+            <div class="color-readout"><span class="swatch" id="bgColorSwatch" style="background:#ffffff;"></span>Background <span id="bgColorHex">#ffffff</span></div>
+          </div>
+          <div class="color-field">
+            <input type="color" id="fgColorPicker" value="#000000">
+            <div class="color-readout"><span class="swatch" id="fgColorSwatch" style="background:#000000;"></span>Foreground <span id="fgColorHex">#000000</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="toggle-pill">
+        <span class="tp-label">⏯ Animation playback</span>
+        <label class="switch">
+          <input type="checkbox" id="animToggle" checked>
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="timeline-box" id="timelineContainer">
+        <div class="timeline-head">
+          <span>Frame timeline</span>
+          <span id="totalFramesDisplay">4 frames</span>
+        </div>
+        <div class="timeline-strip" id="timelineFrames"></div>
+        <div class="timeline-controls">
+          <button class="mini-btn" id="addFrameBtn">+ Frame</button>
+          <button class="mini-btn" id="duplicateFrameBtn">⧉ Duplicate</button>
+          <button class="mini-btn" id="clearFramesBtn">⌫ Clear</button>
+          <div class="speed-ctl">
+            <span>slow</span>
+            <input type="range" id="animSpeedRange" min="50" max="500" value="130" step="10">
+            <span id="speedDisplay">130ms</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="status-line" id="statusBar">Ready</div>
+
+    <div class="btn-row">
+      <button class="btn btn-secondary" id="cropToggleBtn" disabled>⌗ Precision crop</button>
+      <div class="toggle-pill" style="flex:1;">
+        <span class="tp-label">Invert bitmap</span>
+        <label class="switch">
+          <input type="checkbox" id="pixelToggle" checked>
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>C++ identifier</label>
+      <input type="text" id="variableName" value="TextAsset">
+    </div>
+    <div class="row">
+      <div class="field"><label id="widthLabel">Width (px)</label><input type="number" id="bitmapWidth" value="128" step="8"></div>
+      <div class="field"><label id="heightLabel">Height (px)</label><input type="number" id="bitmapHeight" value="64"></div>
+    </div>
+    <div class="field">
+      <label id="thresholdLabel">Threshold <span class="size-readout" style="display:inline;">128</span></label>
+      <input type="range" id="thresholdRange" min="0" max="255" value="128">
+    </div>
+    <button class="btn btn-amber" id="generateCodeBtn">⚙ Compile header array</button>
+  </div>
+
+  <!-- ============ OUTPUT PANEL ============ -->
+  <div class="panel">
+    <div class="panel-head">
+      <h2><span class="dot"></span>Output</h2>
+      <button class="icon-btn" id="copyFullCodeBtn" style="padding:0.4rem 0.8rem;font-size:0.68rem;">⧉ Copy full code</button>
+    </div>
+
+    <div class="out-tabs">
+      <div class="out-tab active" id="tabPreview">Viewport</div>
+      <div class="out-tab" id="tabCode">Bitmap array</div>
+      <div class="out-tab" id="tabFullCode">Full sketch</div>
+    </div>
+
+    <div id="previewWrapper" class="screen-wrap">
+      <div class="screen-status"><span class="led"></span>signal</div>
+      <div class="screen-dims" id="screenDimsLabel">128×64</div>
+      <div class="placeholder-text" id="placeholderText">Type text, drop an image / video, or pick a sticker…</div>
+      <div class="workspace-inner" id="workspaceContainer" style="display:none;">
+        <img id="srcImageDisplay" alt="Source">
+        <video id="srcVideoDisplay" muted playsinline></video>
+        <canvas id="previewCanvas"></canvas>
+        <div class="crop-box-pro" id="cropBoxPro">
+          <div class="handle-pro h-tl" data-handle="tl"></div>
+          <div class="handle-pro h-tr" data-handle="tr"></div>
+          <div class="handle-pro h-bl" data-handle="bl"></div>
+          <div class="handle-pro h-br" data-handle="br"></div>
+        </div>
+      </div>
+      <div class="video-scrub-bar" id="videoScrubBar">
+        <span id="videoScrubTime">0.0s</span>
+        <input type="range" id="videoScrubRange" min="0" max="100" value="0" step="0.1">
+        <span id="videoScrubDuration">0.0s</span>
+      </div>
+    </div>
+
+    <div id="codeWrapper" class="code-shell" style="display:none;">
+      <textarea class="code-area" id="codeBox" readonly placeholder="// generated bitmap array..."></textarea>
+      <div class="code-foot"><button class="btn btn-secondary" id="copyBtn">⧉ Copy</button></div>
+    </div>
+
+    <div id="fullCodeWrapper" class="code-shell" style="display:none;">
+      <textarea class="code-area" id="fullCodeBox" readonly placeholder="// full Arduino/ESP32 sketch..."></textarea>
+      <div class="code-foot"><button class="btn btn-secondary" id="copyFullCodeBtn2">⧉ Copy</button></div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<script>
+// ========== FONT DATABASE ==========
+const FONTS = {
+  en: [
+    { name: 'Arial', family: 'Arial, Helvetica, sans-serif' },
+    { name: 'Times New Roman', family: 'Times New Roman, serif' },
+    { name: 'Courier New', family: 'Courier New, monospace' },
+    { name: 'Georgia', family: 'Georgia, serif' },
+    { name: 'Verdana', family: 'Verdana, sans-serif' },
+    { name: 'Comic Sans MS', family: 'Comic Sans MS, cursive' },
+    { name: 'Impact', family: 'Impact, sans-serif' },
+    { name: 'Tahoma', family: 'Tahoma, sans-serif' },
+    { name: 'Trebuchet MS', family: 'Trebuchet MS, sans-serif' },
+    { name: 'Palatino', family: 'Palatino, serif' },
+    { name: 'Garamond', family: 'Garamond, serif' },
+    { name: 'Brush Script MT', family: 'Brush Script MT, cursive' }
+  ],
+  hi: [
+    { name: 'Mangal', family: 'Mangal, sans-serif' },
+    { name: 'Nirmala UI', family: 'Nirmala UI, sans-serif' },
+    { name: 'Noto Sans Devanagari', family: 'Noto Sans Devanagari, sans-serif' },
+    { name: 'Kokila', family: 'Kokila, sans-serif' },
+    { name: 'Arial Unicode MS', family: 'Arial Unicode MS, sans-serif' },
+    { name: 'Segoe UI', family: 'Segoe UI, sans-serif' },
+    { name: 'Tahoma', family: 'Tahoma, sans-serif' },
+    { name: 'Gautami', family: 'Gautami, sans-serif' },
+    { name: 'Shruti', family: 'Shruti, sans-serif' },
+    { name: 'Latha', family: 'Latha, sans-serif' }
+  ],
+  bn: [
+    { name: 'Nikosh Bold', family: 'Nikosh, sans-serif' },
+    { name: 'Kalpurush Bold', family: 'Kalpurush, sans-serif' },
+    { name: 'SolaimanLipi Bold', family: 'SolaimanLipi, sans-serif' },
+    { name: 'Siyam Rupali', family: 'Siyam Rupali, sans-serif' },
+    { name: 'Akaash', family: 'Akaash, sans-serif' },
+    { name: 'Mukti', family: 'Mukti, sans-serif' },
+    { name: 'AdorshoLipi', family: 'AdorshoLipi, sans-serif' },
+    { name: 'Bangla Sangam MN', family: 'Bangla Sangam MN, sans-serif' },
+    { name: 'Noto Serif Bengali', family: 'Noto Serif Bengali, serif' },
+    { name: 'Noto Sans Bengali', family: 'Noto Sans Bengali, sans-serif' },
+    { name: 'Nirmala UI', family: 'Nirmala UI, sans-serif' },
+    { name: 'Segoe UI', family: 'Segoe UI, sans-serif' }
+  ],
+  ta: [
+    { name: 'Latha', family: 'Latha, sans-serif' },
+    { name: 'Nirmala UI', family: 'Nirmala UI, sans-serif' },
+    { name: 'Noto Sans Tamil', family: 'Noto Sans Tamil, sans-serif' },
+    { name: 'Arial Unicode MS', family: 'Arial Unicode MS, sans-serif' },
+    { name: 'Segoe UI', family: 'Segoe UI, sans-serif' },
+    { name: 'Tahoma', family: 'Tahoma, sans-serif' },
+    { name: 'Bamini', family: 'Bamini, sans-serif' },
+    { name: 'Vijaya', family: 'Vijaya, sans-serif' },
+    { name: 'Gautami', family: 'Gautami, sans-serif' },
+    { name: 'Kartika', family: 'Kartika, sans-serif' }
+  ],
+  ur: [
+    { name: 'Nafees Web', family: 'Nafees Web, sans-serif' },
+    { name: 'Noto Sans Urdu', family: 'Noto Sans Urdu, sans-serif' },
+    { name: 'Arial Unicode MS', family: 'Arial Unicode MS, sans-serif' },
+    { name: 'Segoe UI', family: 'Segoe UI, sans-serif' },
+    { name: 'Tahoma', family: 'Tahoma, sans-serif' },
+    { name: 'Urdu Naskh', family: 'Urdu Naskh, sans-serif' },
+    { name: 'Jameel Noori Nastaleeq', family: 'Jameel Noori Nastaleeq, serif' },
+    { name: 'Alvi Nastaleeq', family: 'Alvi Nastaleeq, serif' },
+    { name: 'Pak Nastaleeq', family: 'Pak Nastaleeq, serif' },
+    { name: 'Mehr Nastaliq', family: 'Mehr Nastaliq, serif' }
+  ]
+};
+
+// ========== EMOJI DATASET ==========
+const EMOJI_SETS = {
+  "Faces": ["😀","😃","😄","😁","😆","😅","😂","🤣","😊","😇","🙂","🙃","😉","😌","😍","🥰","😘","😗","😙","😚","😋","😛","😝","😜","🤪","🤨","🧐","🤓","😎","🥸","🤩","🥳","😏","😒","😞","😔","😟","😕","🙁","☹️","😣","😖","😫","😩","🥺","😢","😭","😤","😠","😡","🤬","🤯","😳","🥵","🥶","😱","😨","😰","😥","😓","🤗","🤔","🫣","🤭","🫢","🫡","🤫","🫠","🤥","😶","😐","😑","😬","🫨","😮","😯","😲","🥱","😴","🤤","😪","😵","😵‍💫","🫥","🤐","🥴","🤢","🤮","🤧","😷","🤒","🤕","🤑","🤠","😈","👿","👹","👺","🤡","💩","👻","💀","☠️","👽","👾","🤖","🎃"],
+  "Animals": ["🐶","🐱","🐭","🐹","🐰","🦊","🐻","🐼","🐻‍❄️","🐨","🐯","🦁","🐮","🐷","🐽","🐸","🐵","🙈","🙉","🙊","🐒","🐔","🐧","🐦","🐤","🐣","🐥","🦆","🦅","🦉","🦤","🦩","🦚","🦜","🦢","🦫","🦨","🦡","🦘","🦬","🐄","🐖","🐏","🐑","🐐","🐪","🐫","🦙","🦒","🐘","🦣","🦏","🦛","🐭","🐁","🐀","🐹","🐰","🐇","🐿️","🦫","🦔","🦇","🐻","🐨","🐼","🦥","🦦","🦨","🦘","🦡","🦅","🦆","🦢","🦉","🦤","🦩","🦚","🦜","🐊","🐢","🦎","🐍","🐲","🐉","🦕","🦖","🐳","🐋","🐬","🦭","🐟","🐠","🐡","🦈","🐙","🐚","🪼","🦀","🦞","🦐","🦑","🦋","🐌","🐛","🐜","🐝","🪲","🐞","🦗","🕷️","🕸️","🦂","🦟","🪰","🪱","🦠"],
+  "Food": ["🍏","🍎","🍐","🍊","🍋","🍌","🍉","🍇","🍓","🫐","🍒","🍑","🥭","🍍","🥥","🥝","🍅","🫒","🥑","🍆","🥔","🥕","🌽","🌶️","🫑","🧅","🧄","🫘","🍄","🥜","🫚","🍞","🥐","🥖","🫓","🥨","🥯","🥞","🧇","🧀","🍖","🍗","🥩","🥓","🍔","🍟","🍕","🌭","🥪","🌮","🌯","🫔","🥙","🧆","🍳","🥘","🍲","🫕","🥣","🥗","🍿","🧈","🧂","🥫","🍱","🍘","🍙","🍚","🍛","🍜","🍝","🍠","🍢","🍣","🍤","🍥","🦪","🍡","🥟","🥠","🥡","🍦","🍧","🍨","🍩","🍪","🎂","🍰","🧁","🥧","🍫","🍬","🍭","🍮","🍯","🍼","🥛","☕","🫖","🍵","🍶","🍾","🍷","🍸","🍹","🍺","🍻","🥂","🥃","🥤","🧋","🧃","🧉","🧊"],
+  "Symbols": ["💘","💝","💖","💗","💓","💞","💕","💟","❣️","💔","❤️","❤️‍🔥","❤️‍🩹","🧡","💛","💚","💙","💜","🖤","🤍","🤎","🩵","🩶","🩷","💯","💢","💥","💫","💦","💨","🕳️","💣","💬","👁️‍🗨️","🗨️","🗯️","💭","💤","🌐","🌀","♠️","♥️","♦️","♣️","🃏","🀄","🎴","🎭","🔇","🔈","🔉","🔊","📢","📣","📯","🔔","🔕","🎵","🎶","💹","🛗","🏧","🚮","🚰","♿","🚹","🚺","🚻","🚼","🚾","🛂","🛃","🛄","🛅","⚠️","🚸","⛔","🚫","🚳","🚯","🚷","🚱","🚳","☢️","☣️","⬆️","↗️","➡️","↘️","⬇️","↙️","⬅️","↖️","↕️","↔️","↩️","↪️","⤴️","⤵️","🔀","🔁","🔂","🔄","🔃"]
+};
+
+// ========== DOM REFS ==========
+const imageLoader = document.getElementById('imageLoader');
+const videoLoader = document.getElementById('videoLoader');
+const canvas = document.getElementById('previewCanvas');
+const ctx = canvas.getContext('2d');
+const srcImageDisplay = document.getElementById('srcImageDisplay');
+const srcVideoDisplay = document.getElementById('srcVideoDisplay');
+const workspaceContainer = document.getElementById('workspaceContainer');
+const cropBoxPro = document.getElementById('cropBoxPro');
+const statusBar = document.getElementById('statusBar');
+const configPanel = document.getElementById('configPanel');
+const selectedBadge = document.getElementById('selectedBadge');
+const bitmapWidthInput = document.getElementById('bitmapWidth');
+const bitmapHeightInput = document.getElementById('bitmapHeight');
+const thresholdRange = document.getElementById('thresholdRange');
+const variableNameInput = document.getElementById('variableName');
+const animTypeSelect = document.getElementById('animType');
+const thresholdLabel = document.getElementById('thresholdLabel');
+const generateCodeBtn = document.getElementById('generateCodeBtn');
+const cropToggleBtn = document.getElementById('cropToggleBtn');
+const themeToggle = document.getElementById('themeToggle');
+const codeBox = document.getElementById('codeBox');
+const fullCodeBox = document.getElementById('fullCodeBox');
+const tabPreview = document.getElementById('tabPreview');
+const tabCode = document.getElementById('tabCode');
+const tabFullCode = document.getElementById('tabFullCode');
+const previewWrapper = document.getElementById('previewWrapper');
+const codeWrapper = document.getElementById('codeWrapper');
+const fullCodeWrapper = document.getElementById('fullCodeWrapper');
+const placeholderText = document.getElementById('placeholderText');
+const copyBtn = document.getElementById('copyBtn');
+const copyFullCodeBtn = document.getElementById('copyFullCodeBtn');
+const copyFullCodeBtn2 = document.getElementById('copyFullCodeBtn2');
+const pixelToggle = document.getElementById('pixelToggle');
+const textInput = document.getElementById('textInput');
+const languageSelect = document.getElementById('languageSelect');
+const fontSelect = document.getElementById('fontSelect');
+const textSizeRange = document.getElementById('textSizeRange');
+const sizeDisplay = document.getElementById('sizeDisplay');
+const charCount = document.getElementById('charCount');
+const timelineFrames = document.getElementById('timelineFrames');
+const totalFramesDisplay = document.getElementById('totalFramesDisplay');
+const animSpeedRange = document.getElementById('animSpeedRange');
+const speedDisplay = document.getElementById('speedDisplay');
+const exportZipBtn = document.getElementById('exportZipBtn');
+const animToggle = document.getElementById('animToggle');
+const bgColorPicker = document.getElementById('bgColorPicker');
+const fgColorPicker = document.getElementById('fgColorPicker');
+const bgColorSwatch = document.getElementById('bgColorSwatch');
+const fgColorSwatch = document.getElementById('fgColorSwatch');
+const bgColorHex = document.getElementById('bgColorHex');
+const fgColorHex = document.getElementById('fgColorHex');
+const screenDimsLabel = document.getElementById('screenDimsLabel');
+const videoFrameCountField = document.getElementById('videoFrameCountField');
+const videoFrameCountRange = document.getElementById('videoFrameCountRange');
+const videoFrameCountDisplay = document.getElementById('videoFrameCountDisplay');
+const videoScrubBar = document.getElementById('videoScrubBar');
+const videoScrubRange = document.getElementById('videoScrubRange');
+const videoScrubTime = document.getElementById('videoScrubTime');
+const videoScrubDuration = document.getElementById('videoScrubDuration');
+
+let originalImage = null;          // current still-image source (Image or Canvas)
+let gifFramesData = [];
+let activeRenderPlaybackInterval = null;
+let activePlaybackIndex = 0;
+let isCropMode = false;
+let currentMode = 'text';
+let cropMetrics = { top: 0, left: 0, width: 100, height: 100 };
+let isDragging = false, isResizing = false, activeResizeHandle = "";
+
+// Per-mode snapshots so switching source tabs doesn't bleed one mode's loaded
+// asset into another (e.g. a sticker shouldn't reappear under the Image tab).
+const modeState = {
+  file: { originalImage: null, gifFramesData: [], timelineFramesData: [], cropMetrics: { top: 0, left: 0, width: 100, height: 100 }, cropDisabled: true },
+  video: { originalImage: null, gifFramesData: [], timelineFramesData: [], cropMetrics: { top: 10, left: 10, width: 80, height: 80 }, cropDisabled: true },
+  emoji: { originalImage: null, gifFramesData: [], timelineFramesData: [], cropMetrics: { top: 0, left: 0, width: 100, height: 100 }, cropDisabled: true }
+};
+
+function snapshotCurrentMode(mode) {
+  if (mode === 'text') return;
+  if (!modeState[mode]) return;
+  modeState[mode].originalImage = originalImage;
+  modeState[mode].gifFramesData = gifFramesData;
+  modeState[mode].timelineFramesData = timelineFramesData;
+  modeState[mode].cropMetrics = { ...cropMetrics };
+  modeState[mode].cropDisabled = cropToggleBtn.disabled;
+}
+
+function restoreMode(mode) {
+  if (mode === 'text' || !modeState[mode]) return false;
+  const s = modeState[mode];
+  if (!s.originalImage && s.gifFramesData.length === 0) return false;
+  originalImage = s.originalImage;
+  gifFramesData = s.gifFramesData;
+  timelineFramesData = s.timelineFramesData;
+  cropMetrics = { ...s.cropMetrics };
+  cropToggleBtn.disabled = s.cropDisabled;
+  selectedFrameIndex = Math.min(selectedFrameIndex, Math.max(timelineFramesData.length - 1, 0));
+  renderTimeline();
+  return true;
+}
+let startX, startY, startLeft, startTop, startWidth, startHeight;
+let renderTimeout = null;
+let currentArrayData = '';
+let animSpeed = 130;
+let isAnimActive = true;
+let typewriterText = '';
+let isTypewriterComplete = false;
+
+// User colors
+let userBgColor = '#ffffff';
+let userFgColor = '#000000';
+
+// Timeline state
+let timelineFramesData = [];
+let selectedFrameIndex = 0;
+
+// Video state
+let videoElement = null;
+let videoFrameCount = 12;
+let videoFramesExtracted = [];   // array of {canvas}
+let videoSourceFile = null;
+
+// ---- Bug-fix flag: timeline UI must NEVER be touched by the render loop
+// unless we are actually in the "useTimeline" playback branch (multi still-image
+// frames). Previously the render loop queried and mutated `.frame-item` classes
+// on every tick regardless of mode, which fought with the user interacting with
+// (selecting/clicking inside) the text/typing area or the timeline list itself.
+// renderTimeline() is now the ONLY place that writes `.active` onto frame items,
+// and it's called from a single, explicit, user-intent-driven set of call sites.
+
+// ========== COLOR PICKER ==========
+bgColorPicker.addEventListener('input', function () {
+  userBgColor = this.value;
+  bgColorSwatch.style.background = userBgColor;
+  bgColorHex.textContent = userBgColor;
+  refreshActivePreview();
+});
+
+fgColorPicker.addEventListener('input', function () {
+  userFgColor = this.value;
+  fgColorSwatch.style.background = userFgColor;
+  fgColorHex.textContent = userFgColor;
+  refreshActivePreview();
+});
+
+function refreshActivePreview() {
+  if (currentMode === 'text' && textInput.value.trim()) {
+    renderTextToBitmapDynamic();
+    return;
+  }
+  if (!originalImage && gifFramesData.length === 0) return;
+  if (isAnimActive) {
+    clearInterval(activeRenderPlaybackInterval);
+    executeRenderLoopEngine();
+  } else {
+    renderFrameToTargetResolution(originalImage);
+  }
+}
+
+// ========== ANIMATION TOGGLE ==========
+animToggle.addEventListener('change', function () {
+  isAnimActive = this.checked;
+  if (isAnimActive) {
+    if (originalImage || gifFramesData.length) executeRenderLoopEngine();
+  } else {
+    clearInterval(activeRenderPlaybackInterval);
+    if (originalImage) renderFrameToTargetResolution(originalImage);
+  }
+});
+
+// ========== FONT MANAGEMENT ==========
+function updateFonts() {
+  const lang = languageSelect.value;
+  const fonts = FONTS[lang] || FONTS.en;
+  fontSelect.innerHTML = '';
+  fonts.forEach(f => {
+    const opt = document.createElement('option');
+    opt.value = f.family;
+    opt.textContent = f.name;
+    fontSelect.appendChild(opt);
+  });
+}
+languageSelect.addEventListener('change', () => {
+  updateFonts();
+  if (currentMode === 'text') scheduleRender();
+});
+updateFonts();
+
+// ========== EMOJI / STICKER UI ==========
+const emojiCategorySelect = document.getElementById('emojiCategorySelect');
+const emojiGrid = document.getElementById('emojiGrid');
+Object.keys(EMOJI_SETS).forEach(cat => {
+  let opt = document.createElement('option'); opt.value = cat; opt.textContent = cat;
+  emojiCategorySelect.appendChild(opt);
+});
+function loadEmojiGrid(catName) {
+  emojiGrid.innerHTML = "";
+  EMOJI_SETS[catName].forEach(em => {
+    let cell = document.createElement('div'); cell.className = "emoji-item"; cell.textContent = em;
+    cell.addEventListener('click', () => {
+      document.querySelectorAll('.emoji-item').forEach(i => i.classList.remove('active'));
+      cell.classList.add('active');
+      selectedBadge.textContent = `Sticker: ${em}`;
+      configPanel.classList.add('show');
+      importEmojiAsset(em);
+    });
+    emojiGrid.appendChild(cell);
+  });
+}
+emojiCategorySelect.addEventListener('change', (e) => loadEmojiGrid(e.target.value));
+loadEmojiGrid(Object.keys(EMOJI_SETS)[0]);
+
+// ========== TIMELINE FUNCTIONS ==========
+// IMPORTANT: this module only runs / repaints when explicitly invoked by user
+// actions (add/duplicate/clear/click frame) or by a source load (image/gif/video).
+// It is intentionally NEVER called as a side effect of typing text or of the
+// render loop's per-tick procedural-animation path, fixing the original bug
+// where the frame strip would re-highlight while a person was selecting text.
+
+function initTimeline(defaultFrames) {
+  timelineFramesData = defaultFrames || [
+    { label: 'Start', emoji: '▶' },
+    { label: 'Mid 1', emoji: '◆' },
+    { label: 'Mid 2', emoji: '◆' },
+    { label: 'End', emoji: '■' }
+  ];
+  selectedFrameIndex = 0;
+  renderTimeline();
+}
+
+function renderTimeline() {
+  timelineFrames.innerHTML = '';
+  timelineFramesData.forEach((frame, index) => {
+    const div = document.createElement('div');
+    div.className = `frame-item ${index === selectedFrameIndex ? 'active' : ''}`;
+    div.innerHTML = `
+      <span class="frame-number">#${index + 1}</span>
+      <span class="frame-preview">${frame.emoji || '▢'}</span>
+      <span class="frame-delay">${Math.round(animSpeed)}ms</span>
+      <button class="delete-frame" data-index="${index}">×</button>
+    `;
+    div.addEventListener('click', () => {
+      selectedFrameIndex = index;
+      renderTimeline();
+      if ((originalImage || gifFramesData.length) && isAnimActive) executeRenderLoopEngine();
+    });
+    const delBtn = div.querySelector('.delete-frame');
+    delBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (timelineFramesData.length <= 1) { alert('Need at least 1 frame!'); return; }
+      timelineFramesData.splice(index, 1);
+      if (selectedFrameIndex >= timelineFramesData.length) selectedFrameIndex = timelineFramesData.length - 1;
+      renderTimeline();
+      if ((originalImage || gifFramesData.length) && isAnimActive) executeRenderLoopEngine();
+    });
+    timelineFrames.appendChild(div);
+  });
+  totalFramesDisplay.textContent = `${timelineFramesData.length} frames`;
+}
+
+function setActiveFrameVisual(idx) {
+  // Lightweight: only flips the 'active' class on existing nodes, does not
+  // rebuild the DOM, and only called from the useTimeline playback branch.
+  const items = timelineFrames.querySelectorAll('.frame-item');
+  items.forEach((el, i) => el.classList.toggle('active', i === idx));
+}
+
+function addFrame() {
+  const newFrame = { label: `Frame ${timelineFramesData.length + 1}`, emoji: '▢' };
+  timelineFramesData.push(newFrame);
+  selectedFrameIndex = timelineFramesData.length - 1;
+  renderTimeline();
+  if ((originalImage || gifFramesData.length) && isAnimActive) executeRenderLoopEngine();
+}
+
+function duplicateFrame() {
+  if (timelineFramesData.length === 0) return;
+  const current = timelineFramesData[selectedFrameIndex];
+  const newFrame = { ...current, label: `${current.label} (copy)` };
+  timelineFramesData.splice(selectedFrameIndex + 1, 0, newFrame);
+  selectedFrameIndex = selectedFrameIndex + 1;
+  renderTimeline();
+  if ((originalImage || gifFramesData.length) && isAnimActive) executeRenderLoopEngine();
+}
+
+function clearFrames() {
+  if (timelineFramesData.length <= 1) return;
+  if (confirm('Clear all frames except the first?')) {
+    const first = timelineFramesData[0];
+    timelineFramesData = [first];
+    selectedFrameIndex = 0;
+    renderTimeline();
+    if ((originalImage || gifFramesData.length) && isAnimActive) executeRenderLoopEngine();
+  }
+}
+
+document.getElementById('addFrameBtn').addEventListener('click', addFrame);
+document.getElementById('duplicateFrameBtn').addEventListener('click', duplicateFrame);
+document.getElementById('clearFramesBtn').addEventListener('click', clearFrames);
+
+// ========== SPEED CONTROL ==========
+animSpeedRange.addEventListener('input', function () {
+  animSpeed = parseInt(this.value);
+  speedDisplay.textContent = animSpeed + 'ms';
+  renderTimeline(); // updates the ms readout on each frame chip without changing selection
+  if ((originalImage || gifFramesData.length) && isAnimActive) {
+    clearInterval(activeRenderPlaybackInterval);
+    executeRenderLoopEngine();
+  }
+});
+
+// ========== TYPEWRITER & OPEN/CLOSE HELPERS ==========
+function getTypewriterFrames(text, totalFrames) {
+  const frames = [];
+  const len = text.length;
+  if (len === 0) return frames;
+  for (let i = 0; i < totalFrames; i++) {
+    const progress = (i + 1) / totalFrames;
+    const cCount = Math.ceil(progress * len);
+    frames.push(text.substring(0, Math.min(cCount, len)));
+  }
+  return frames;
+}
+
+function getOpenCloseFrames(totalFrames) {
+  const frames = [];
+  for (let i = 0; i < totalFrames; i++) {
+    const progress = i / totalFrames;
+    frames.push(Math.sin(progress * Math.PI));
+  }
+  return frames;
+}
+
+// ========== DYNAMIC TEXT RENDER ==========
+function scheduleRender() {
+  if (renderTimeout) clearTimeout(renderTimeout);
+  renderTimeout = setTimeout(() => {
+    if (currentMode === 'text' && textInput.value.trim()) {
+      renderTextToBitmapDynamic();
+    }
+    renderTimeout = null;
+  }, 100);
+}
+
+function renderTextToBitmapDynamic() {
+  const text = textInput.value.trim();
+  if (!text) {
+    placeholderText.style.display = 'block';
+    workspaceContainer.style.display = 'none';
+    return;
+  }
+
+  statusBar.style.display = 'none';
+  placeholderText.style.display = 'none';
+  workspaceContainer.style.display = 'block';
+  canvas.style.display = 'block';
+  srcImageDisplay.style.display = 'none';
+  srcVideoDisplay.style.display = 'none';
+  configPanel.classList.add('show');
+  selectedBadge.textContent = `Text: "${text.substring(0, 20)}${text.length > 20 ? '...' : ''}"`;
+
+  const temp = document.createElement('canvas');
+  const tw = parseInt(bitmapWidthInput.value) || 128;
+  const th = parseInt(bitmapHeightInput.value) || 64;
+  temp.width = tw;
+  temp.height = th;
+  const tCtx = temp.getContext('2d');
+
+  tCtx.fillStyle = userBgColor;
+  tCtx.fillRect(0, 0, tw, th);
+
+  let desiredSize = parseInt(textSizeRange.value) || 64;
+  const fontFamily = fontSelect.value || 'Noto Sans Bengali, sans-serif';
+
+  tCtx.font = `bold ${desiredSize}px ${fontFamily}`;
+
+  const lines = text.split('\n');
+  let maxLineWidth = 0;
+  lines.forEach(line => {
+    const m = tCtx.measureText(line);
+    if (m.width > maxLineWidth) maxLineWidth = m.width;
+  });
+
+  let maxWidth = tw * 0.92;
+  let actualSize = desiredSize;
+
+  while ((maxLineWidth > maxWidth || (lines.length > 1 && lines.length * actualSize * 1.2 > th * 0.85)) && actualSize > 8) {
+    actualSize -= 1;
+    tCtx.font = `bold ${actualSize}px ${fontFamily}`;
+    maxLineWidth = 0;
+    lines.forEach(line => {
+      const m = tCtx.measureText(line);
+      if (m.width > maxLineWidth) maxLineWidth = m.width;
+    });
+  }
+
+  sizeDisplay.textContent = actualSize + 'px';
+
+  tCtx.font = `bold ${actualSize}px ${fontFamily}`;
+  tCtx.textAlign = 'center';
+  tCtx.textBaseline = 'middle';
+  tCtx.fillStyle = userFgColor;
+
+  if (lines.length === 1) {
+    tCtx.fillText(text, tw / 2, th / 2);
+  } else {
+    const lineHeight = actualSize * 1.2;
+    const totalHeight = lines.length * lineHeight;
+    const startY = (th - totalHeight) / 2 + actualSize / 2;
+    lines.forEach((line, i) => {
+      tCtx.fillText(line, tw / 2, startY + i * lineHeight);
+    });
+  }
+
+  typewriterText = text;
+  isTypewriterComplete = false;
+
+  // Text mode never drives the multi-frame timeline strip — only procedural
+  // (pulse/spin/typewriter/etc) animation, so we deliberately do NOT call
+  // initTimeline()/renderTimeline() here. This is the core bug fix: previously
+  // every keystroke re-ran initTimeline(), thrashing the frame strip DOM while
+  // the user was actively selecting/editing the textarea.
+  timelineFramesData = [];
+  document.getElementById('timelineContainer').style.opacity = '0.35';
+  document.getElementById('timelineContainer').style.pointerEvents = 'none';
+
+  originalImage = new Image();
+  originalImage.onload = () => {
+    srcImageDisplay.src = originalImage.src;
+    cropToggleBtn.disabled = true;
+    cropMetrics = { top: 0, left: 0, width: 100, height: 100 };
+    if (isAnimActive) executeRenderLoopEngine();
+    else renderFrameToTargetResolution(originalImage);
+  };
+  originalImage.src = temp.toDataURL();
+}
+
+function enableTimelinePanel() {
+  document.getElementById('timelineContainer').style.opacity = '1';
+  document.getElementById('timelineContainer').style.pointerEvents = 'auto';
+}
+
+// ========== IMAGE FILE LOADER ==========
+imageLoader.addEventListener('change', (e) => {
+  const files = e.target.files;
+  if (!files || files.length === 0) return;
+  clearInterval(activeRenderPlaybackInterval);
+  gifFramesData = [];
+  placeholderText.style.display = 'none';
+  workspaceContainer.style.display = 'block';
+  configPanel.classList.add('show');
+  enableTimelinePanel();
+
+  if (files.length > 1) {
+    const loadedImages = [];
+    let loadedCount = 0;
+    for (let f of files) {
+      const reader = new FileReader();
+      reader.onload = function (evt) {
+        const img = new Image();
+        img.onload = () => {
+          loadedImages.push(img);
+          loadedCount++;
+          if (loadedCount === files.length) {
+            const frames = loadedImages.map((img, i) => ({ label: `Image ${i + 1}`, emoji: '▣', image: img }));
+            originalImage = loadedImages[0];
+            initTimeline(frames);
+            cropToggleBtn.disabled = true;
+            cropMetrics = { top: 0, left: 0, width: 100, height: 100 };
+            selectedBadge.textContent = `${files.length} images loaded as frames`;
+            if (isAnimActive) executeRenderLoopEngine();
+            else renderFrameToTargetResolution(originalImage);
+          }
+        };
+        img.src = evt.target.result;
+      };
+      reader.readAsDataURL(f);
+    }
+    return;
+  }
+
+  const file = files[0];
+  selectedBadge.textContent = `File: ${file.name}`;
+
+  if (file.type === "image/gif") {
+    const reader = new FileReader();
+    reader.onload = function (evt) {
+      decodeGifBinaryToFrames(new Uint8Array(evt.target.result));
+    };
+    reader.readAsArrayBuffer(file);
+  } else {
+    const reader = new FileReader();
+    reader.onload = function (evt) {
+      originalImage = new Image();
+      originalImage.onload = () => {
+        srcImageDisplay.src = originalImage.src;
+        cropToggleBtn.disabled = false;
+        cropMetrics = { top: 10, left: 10, width: 80, height: 80 };
+        statusBar.style.display = 'none';
+        canvas.style.display = 'block';
+        srcImageDisplay.style.display = 'none';
+        srcVideoDisplay.style.display = 'none';
+        initTimeline([{ label: 'Still', emoji: '▣' }]);
+        if (isAnimActive) executeRenderLoopEngine();
+        else renderFrameToTargetResolution(originalImage);
+      };
+      originalImage.src = evt.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+});
+
+// ========== GIF DECODE ==========
+function decodeGifBinaryToFrames(uint8Array) {
+  try {
+    statusBar.textContent = "Decoding GIF frames...";
+    statusBar.style.display = 'block';
+    const gifReader = new GifReader(uint8Array);
+    const width = gifReader.width; const height = gifReader.height;
+    const frameCanvas = document.createElement('canvas');
+    frameCanvas.width = width; frameCanvas.height = height;
+    const fCtx = frameCanvas.getContext('2d');
+    let frameImageData = fCtx.createImageData(width, height);
+    gifFramesData = [];
+    for (let i = 0; i < gifReader.numFrames(); i++) {
+      gifReader.decodeAndBlitFrameRGBA(i, frameImageData.data);
+      fCtx.putImageData(frameImageData, 0, 0);
+      const cacheCanvas = document.createElement('canvas');
+      cacheCanvas.width = width; cacheCanvas.height = height;
+      cacheCanvas.getContext('2d').drawImage(frameCanvas, 0, 0);
+      gifFramesData.push({ canvas: cacheCanvas, delay: gifReader.frameInfo(i).delay * 10 });
+    }
+    const frames = gifFramesData.map((f, i) => ({ label: `Frame ${i + 1}`, emoji: '▤', canvas: f.canvas, delay: f.delay }));
+    originalImage = gifFramesData[0].canvas;
+    initTimeline(frames);
+    statusBar.textContent = `${gifFramesData.length} frames loaded.`;
+    cropToggleBtn.disabled = true;
+    cropMetrics = { top: 0, left: 0, width: 100, height: 100 };
+    canvas.style.display = 'block';
+    srcImageDisplay.style.display = 'none';
+    srcVideoDisplay.style.display = 'none';
+    if (isAnimActive) executeRenderLoopEngine();
+    else renderFrameToTargetResolution(originalImage);
+  } catch (err) {
+    alert("Failed decoding GIF.");
+    statusBar.style.display = 'none';
+  }
+}
+
+function importEmojiAsset(em) {
+  clearInterval(activeRenderPlaybackInterval);
+  gifFramesData = [];
+  statusBar.style.display = 'none';
+  placeholderText.style.display = 'none';
+  workspaceContainer.style.display = 'block';
+  canvas.style.display = 'block';
+  srcImageDisplay.style.display = 'none';
+  srcVideoDisplay.style.display = 'none';
+  enableTimelinePanel();
+
+  const temp = document.createElement('canvas');
+  temp.width = 256; temp.height = 256;
+  const tCtx = temp.getContext('2d');
+  tCtx.fillStyle = userBgColor;
+  tCtx.fillRect(0, 0, 256, 256);
+  tCtx.font = "180px sans-serif";
+  tCtx.textAlign = "center";
+  tCtx.textBaseline = "middle";
+  tCtx.fillStyle = userFgColor;
+  tCtx.fillText(em, 128, 135);
+  originalImage = new Image();
+  originalImage.onload = () => {
+    srcImageDisplay.src = originalImage.src;
+    cropToggleBtn.disabled = true;
+    cropMetrics = { top: 0, left: 0, width: 100, height: 100 };
+    initTimeline([{ label: 'Sticker', emoji: em }]);
+    if (isAnimActive) executeRenderLoopEngine();
+    else renderFrameToTargetResolution(originalImage);
+  };
+  originalImage.src = temp.toDataURL();
+}
+
+// ========== VIDEO LOADER ==========
+videoLoader.addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  videoSourceFile = file;
+  clearInterval(activeRenderPlaybackInterval);
+  gifFramesData = [];
+  videoFramesExtracted = [];
+  statusBar.textContent = "Loading video…";
+  statusBar.style.display = 'block';
+  placeholderText.style.display = 'none';
+  workspaceContainer.style.display = 'block';
+  configPanel.classList.add('show');
+  enableTimelinePanel();
+  selectedBadge.textContent = `Video: ${file.name}`;
+
+  const url = URL.createObjectURL(file);
+  videoElement = srcVideoDisplay;
+  videoElement.src = url;
+  videoElement.muted = true;
+  videoElement.playsInline = true;
+
+  videoElement.onloadedmetadata = () => {
+    cropToggleBtn.disabled = false;
+    cropMetrics = { top: 10, left: 10, width: 80, height: 80 };
+    videoFrameCountField.style.display = 'block';
+    videoScrubBar.classList.add('show');
+    videoScrubRange.max = videoElement.duration.toFixed(2);
+    videoScrubDuration.textContent = videoElement.duration.toFixed(1) + 's';
+    statusBar.textContent = `Video ready — ${videoElement.duration.toFixed(1)}s. Sampling frames…`;
+    extractVideoFrames();
+  };
+  videoElement.onerror = () => {
+    alert('Could not load this video file.');
+    statusBar.style.display = 'none';
+  };
+});
+
+videoFrameCountRange.addEventListener('input', function () {
+  videoFrameCount = parseInt(this.value);
+  videoFrameCountDisplay.textContent = videoFrameCount;
+  if (videoElement && videoElement.duration) {
+    clearTimeout(window._vfcDebounce);
+    window._vfcDebounce = setTimeout(() => extractVideoFrames(), 220);
+  }
+});
+
+videoScrubRange.addEventListener('input', function () {
+  if (!videoElement) return;
+  clearInterval(activeRenderPlaybackInterval);
+  const t = parseFloat(this.value);
+  videoScrubTime.textContent = t.toFixed(1) + 's';
+  seekVideoTo(t).then(() => {
+    if (isCropMode) {
+      // show live video frame behind the crop box
+      srcVideoDisplay.style.display = 'block';
+      canvas.style.display = 'none';
+    } else {
+      renderFrameToTargetResolution(videoElement);
+    }
+  });
+});
+
+function seekVideoTo(t) {
+  return new Promise((resolve) => {
+    const onSeeked = () => { videoElement.removeEventListener('seeked', onSeeked); resolve(); };
+    videoElement.addEventListener('seeked', onSeeked);
+    videoElement.currentTime = Math.min(Math.max(t, 0), videoElement.duration);
+  });
+}
+
+async function extractVideoFrames() {
+  if (!videoElement || !videoElement.duration) return;
+  clearInterval(activeRenderPlaybackInterval);
+  const duration = videoElement.duration;
+  const n = videoFrameCount;
+  const wasPlaying = false;
+  videoElement.pause();
+
+  const frames = [];
+  videoFramesExtracted = [];
+  for (let i = 0; i < n; i++) {
+    const t = (n === 1) ? 0 : (i / (n - 1)) * duration * 0.999;
+    await seekVideoTo(t);
+    const w = videoElement.videoWidth, h = videoElement.videoHeight;
+    const cap = document.createElement('canvas');
+    cap.width = w; cap.height = h;
+    cap.getContext('2d').drawImage(videoElement, 0, 0, w, h);
+    videoFramesExtracted.push(cap);
+    frames.push({ label: `Frame ${i + 1}`, emoji: '▶', canvas: cap });
+  }
+
+  originalImage = videoFramesExtracted[0];
+  initTimeline(frames);
+  statusBar.textContent = `${n} frames sampled from video.`;
+  setTimeout(() => statusBar.style.display = 'none', 2500);
+
+  srcVideoDisplay.style.display = 'none';
+  canvas.style.display = 'block';
+  if (!isCropMode) {
+    if (isAnimActive) executeRenderLoopEngine();
+    else renderFrameToTargetResolution(originalImage);
+  }
+}
+
+// ========== RENDER ENGINE ==========
+function executeRenderLoopEngine() {
+  clearInterval(activeRenderPlaybackInterval);
+  if (!isAnimActive) {
+    if (originalImage) renderFrameToTargetResolution(originalImage);
+    return;
+  }
+
+  canvas.style.display = 'block';
+  workspaceContainer.style.display = 'block';
+  placeholderText.style.display = 'none';
+
+  const motionFX = animTypeSelect.value;
+  const isGifActive = gifFramesData.length > 0;
+  const isProceduralActive = (motionFX !== 'none' && originalImage);
+  const useTimeline = timelineFramesData.length > 1 && !isGifActive;
+
+  if (!originalImage && gifFramesData.length === 0) return;
+
+  // Typewriter (text mode only)
+  if (motionFX === 'typewriter' && currentMode === 'text' && originalImage) {
+    const text = typewriterText || textInput.value.trim();
+    if (text) {
+      const totalFrames = Math.min(text.length, 30);
+      const typewriterFramesArr = getTypewriterFrames(text, totalFrames);
+      if (typewriterFramesArr.length > 0) {
+        activePlaybackIndex = 0;
+        isTypewriterComplete = false;
+        activeRenderPlaybackInterval = setInterval(() => {
+          const frameText = typewriterFramesArr[activePlaybackIndex % typewriterFramesArr.length];
+          const isLastFrame = (activePlaybackIndex >= typewriterFramesArr.length - 1);
+          if (isLastFrame) isTypewriterComplete = true;
+          const showCursor = !isTypewriterComplete;
+          renderTypewriterFrame(frameText, text, showCursor);
+          activePlaybackIndex = (activePlaybackIndex + 1) % typewriterFramesArr.length;
+          if (activePlaybackIndex === 0 && isTypewriterComplete) isTypewriterComplete = false;
+        }, animSpeed);
+        return;
+      }
+    }
+  }
+
+  // Open/close (works on any single source)
+  if (motionFX === 'openClose' && originalImage) {
+    const totalFrames = 8;
+    const openCloseValues = getOpenCloseFrames(totalFrames);
+    activePlaybackIndex = 0;
+    activeRenderPlaybackInterval = setInterval(() => {
+      const progress = openCloseValues[activePlaybackIndex % openCloseValues.length];
+      renderOpenCloseFrame(originalImage, progress);
+      activePlaybackIndex = (activePlaybackIndex + 1) % openCloseValues.length;
+    }, animSpeed);
+    return;
+  }
+
+  if (isGifActive) {
+    activePlaybackIndex = 0;
+    activeRenderPlaybackInterval = setInterval(() => {
+      const frame = gifFramesData[activePlaybackIndex] || gifFramesData[0];
+      renderFrameToTargetResolution(frame.canvas);
+      activePlaybackIndex = (activePlaybackIndex + 1) % gifFramesData.length;
+    }, gifFramesData[0].delay || animSpeed);
+  } else if (useTimeline) {
+    activePlaybackIndex = 0;
+    activeRenderPlaybackInterval = setInterval(() => {
+      const frameData = timelineFramesData[activePlaybackIndex];
+      if (frameData.image) {
+        renderFrameToTargetResolution(frameData.image);
+      } else if (frameData.canvas) {
+        renderFrameToTargetResolution(frameData.canvas);
+      } else {
+        renderFrameToTargetResolution(originalImage, { type: motionFX, step: activePlaybackIndex });
+      }
+      // Only place the playback loop is allowed to touch frame-item DOM —
+      // and only in this branch, which strictly means we ARE animating a real
+      // multi-frame source (images/gif/video), never the text textarea.
+      setActiveFrameVisual(activePlaybackIndex);
+      activePlaybackIndex = (activePlaybackIndex + 1) % timelineFramesData.length;
+    }, animSpeed);
+  } else if (isProceduralActive) {
+    activePlaybackIndex = 0;
+    activeRenderPlaybackInterval = setInterval(() => {
+      renderFrameToTargetResolution(originalImage, { type: motionFX, step: activePlaybackIndex });
+      activePlaybackIndex = (activePlaybackIndex + 1) % 4;
+    }, animSpeed);
+  } else if (originalImage) {
+    renderFrameToTargetResolution(originalImage);
+  }
+}
+
+// ========== TYPEWRITER RENDER ==========
+function renderTypewriterFrame(displayText, fullText, showCursor) {
+  const tw = parseInt(bitmapWidthInput.value) || 128;
+  const th = parseInt(bitmapHeightInput.value) || 64;
+  const threshold = parseInt(thresholdRange.value);
+  document.querySelector('#thresholdLabel .size-readout').textContent = threshold;
+  canvas.width = tw; canvas.height = th;
+
+  const temp = document.createElement('canvas');
+  temp.width = tw; temp.height = th;
+  const tCtx = temp.getContext('2d');
+
+  tCtx.fillStyle = userBgColor;
+  tCtx.fillRect(0, 0, tw, th);
+
+  let actualSize = parseInt(textSizeRange.value) || 64;
+  const fontFamily = fontSelect.value || 'Noto Sans Bengali, sans-serif';
+  tCtx.font = `bold ${actualSize}px ${fontFamily}`;
+  tCtx.textAlign = 'center';
+  tCtx.textBaseline = 'middle';
+  tCtx.fillStyle = userFgColor;
+
+  const lines = displayText.split('\n');
+  if (lines.length === 1) {
+    const textWithCursor = showCursor ? displayText + '█' : displayText;
+    tCtx.fillText(textWithCursor, tw / 2, th / 2);
+  } else {
+    const lineHeight = actualSize * 1.2;
+    const totalHeight = lines.length * lineHeight;
+    const startY = (th - totalHeight) / 2 + actualSize / 2;
+    lines.forEach((line, i) => {
+      const isLastLine = (i === lines.length - 1);
+      const textWithCursor = (isLastLine && showCursor) ? line + '█' : line;
+      tCtx.fillText(textWithCursor, tw / 2, startY + i * lineHeight);
+    });
+  }
+
+  commitThresholdedFrame(tCtx, tw, th, threshold);
+}
+
+// ========== OPEN/CLOSE RENDER ==========
+function renderOpenCloseFrame(sourceAsset, progress) {
+  const tw = parseInt(bitmapWidthInput.value) || 128;
+  const th = parseInt(bitmapHeightInput.value) || 64;
+  const threshold = parseInt(thresholdRange.value);
+  document.querySelector('#thresholdLabel .size-readout').textContent = threshold;
+  canvas.width = tw; canvas.height = th;
+
+  const temp = document.createElement('canvas');
+  temp.width = tw; temp.height = th;
+  const tCtx = temp.getContext('2d');
+
+  tCtx.fillStyle = userBgColor;
+  tCtx.fillRect(0, 0, tw, th);
+
+  const scaleX = Math.max(0.05, progress);
+  const scaleY = Math.max(0.05, 1 - (1 - progress) * 0.5);
+
+  const dims = getSourceDims(sourceAsset);
+  const sX = (cropMetrics.left / 100) * dims.w;
+  const sY = (cropMetrics.top / 100) * dims.h;
+  const sW = (cropMetrics.width / 100) * dims.w;
+  const sH = (cropMetrics.height / 100) * dims.h;
+
+  tCtx.save();
+  tCtx.translate(tw / 2, th / 2);
+  tCtx.scale(scaleX, scaleY);
+  tCtx.translate(-tw / 2, -th / 2);
+  tCtx.drawImage(sourceAsset, sX, sY, sW, sH, 0, 0, tw, th);
+  tCtx.restore();
+
+  commitThresholdedFrame(tCtx, tw, th, threshold);
+}
+
+function getSourceDims(asset) {
+  if (!asset) return { w: 0, h: 0 };
+  if (asset.videoWidth) return { w: asset.videoWidth, h: asset.videoHeight };
+  if (asset.naturalWidth) return { w: asset.naturalWidth, h: asset.naturalHeight };
+  return { w: asset.width, h: asset.height };
+}
+
+// ========== STANDARD RENDER ==========
+function renderFrameToTargetResolution(sourceAsset, fxSpecs = null) {
+  if (!sourceAsset) return;
+  if (isCropMode) {
+    canvas.style.display = 'none';
+    if (currentMode === 'video') {
+      srcVideoDisplay.style.display = 'block';
+      srcImageDisplay.style.display = 'none';
+    } else {
+      srcImageDisplay.style.display = 'block';
+      srcVideoDisplay.style.display = 'none';
+    }
+    return;
+  }
+
+  canvas.style.display = 'block';
+  srcImageDisplay.style.display = 'none';
+  srcVideoDisplay.style.display = 'none';
+
+  const tw = parseInt(bitmapWidthInput.value) || 128;
+  const th = parseInt(bitmapHeightInput.value) || 64;
+  const threshold = parseInt(thresholdRange.value);
+  document.querySelector('#thresholdLabel .size-readout').textContent = threshold;
+  canvas.width = tw; canvas.height = th;
+
+  const temp = document.createElement('canvas');
+  temp.width = tw; temp.height = th;
+  const tCtx = temp.getContext('2d');
+
+  tCtx.fillStyle = userBgColor;
+  tCtx.fillRect(0, 0, tw, th);
+
+  const dims = getSourceDims(sourceAsset);
+  const sX = (cropMetrics.left / 100) * dims.w;
+  const sY = (cropMetrics.top / 100) * dims.h;
+  const sW = (cropMetrics.width / 100) * dims.w;
+  const sH = (cropMetrics.height / 100) * dims.h;
+
+  tCtx.save();
+
+  if (fxSpecs) {
+    const step = fxSpecs.step;
+    const t = step / 4;
+    const angle = t * Math.PI * 2;
+    let tx = 0, ty = 0, scX = 1, scY = 1, rot = 0, alpha = 1, skewX = 0, skewY = 0;
+
+    switch (fxSpecs.type) {
+      case 'pulse': { let s = 0.85 + 0.15 * Math.sin(angle); scX = s; scY = s; break; }
+      case 'spin': { rot = step * 90 * Math.PI / 180; break; }
+      case 'bounce': { ty = (step % 2 === 0) ? -5 : 5; if (step === 0 || step === 3) ty = 0; break; }
+      case 'shake': { tx = (step % 2 === 0) ? -4 : 4; break; }
+      case 'flicker': { if (step === 1 || step === 3) alpha = 0.6; break; }
+      case 'wave': { ty = Math.sin(step * 1.2) * 6; break; }
+      case 'zoom': { let s = 0.8 + 0.2 * Math.sin(angle + 1); scX = s; scY = s; break; }
+      case 'skew': { skewX = 0.1 * Math.sin(angle); break; }
+      case 'blink': { scY = (step === 1 || step === 3) ? 0.3 : 1; break; }
+      case 'morph': { scX = 1 + 0.2 * Math.sin(angle); scY = 1 - 0.2 * Math.sin(angle); break; }
+      case 'glow': { alpha = 0.7 + 0.3 * Math.sin(angle + 0.5); break; }
+      case 'drift': { tx = 4 * Math.sin(angle + 1.2); ty = 3 * Math.cos(angle + 0.8); break; }
+      case 'slideUp': { ty = -20 + 20 * (1 - t); break; }
+      case 'slideDown': { ty = 20 - 20 * (1 - t); break; }
+      case 'slideLeft': { tx = -20 + 20 * (1 - t); break; }
+      case 'slideRight': { tx = 20 - 20 * (1 - t); break; }
+      case 'slideDiagonal': { tx = -15 + 15 * (1 - t); ty = -15 + 15 * (1 - t); break; }
+      case 'scrollRight': { let p = t * 2; if (p > 1) p -= 2; tx = -100 + (p * 200); break; }
+      case 'scrollLeft': { let p = t * 2; if (p > 1) p -= 2; tx = 100 - (p * 200); break; }
+      case 'scrollUp': { let p = t * 2; if (p > 1) p -= 2; ty = 100 - (p * 200); break; }
+      case 'scrollDown': { let p = t * 2; if (p > 1) p -= 2; ty = -100 + (p * 200); break; }
+      case 'vanish': { let v = 1 - t; scX = v; scY = v; alpha = v; break; }
+      case 'explode': { let e = 1 + t * 0.4; scX = e; scY = e; alpha = 1 - t * 0.3; break; }
+      case 'implode': { let e = 1 - t * 0.3; scX = e; scY = e; alpha = 1 - t * 0.2; break; }
+      case 'swing': { rot = 0.15 * Math.sin(angle * 1.5); break; }
+      case 'tilt': { rot = 0.2 * Math.sin(angle * 2); skewX = 0.05 * Math.sin(angle * 2); break; }
+      case 'ripple': { skewX = 0.08 * Math.sin(angle * 3); skewY = 0.05 * Math.cos(angle * 2); break; }
+      default: break;
+    }
+
+    tCtx.translate(tw / 2, th / 2);
+    tCtx.translate(tx, ty);
+    tCtx.scale(scX, scY);
+    tCtx.rotate(rot);
+    if (skewX !== 0 || skewY !== 0) tCtx.transform(1, skewY, skewX, 1, 0, 0);
+    tCtx.globalAlpha = alpha;
+    tCtx.translate(-tw / 2, -th / 2);
+  }
+
+  tCtx.drawImage(sourceAsset, sX, sY, sW, sH, 0, 0, tw, th);
+  tCtx.restore();
+
+  commitThresholdedFrame(tCtx, tw, th, threshold);
+}
+
+function commitThresholdedFrame(tCtx, tw, th, threshold) {
+  const imgData = tCtx.getImageData(0, 0, tw, th);
+  const d = imgData.data;
+  const invert = !pixelToggle.checked;
+  for (let i = 0; i < d.length; i += 4) {
+    let luminance = (d[i + 3] < 30) ? 0 : (0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2]);
+    let col = (luminance >= threshold) ? 255 : 0;
+    if (invert) col = col === 0 ? 255 : 0;
+    d[i] = col; d[i + 1] = col; d[i + 2] = col; d[i + 3] = 255;
+  }
+  ctx.putImageData(imgData, 0, 0);
+  currentArrayData = parseCanvasBytesToHexRowString(tw, th, threshold);
+}
+
+// ========== ZIP EXPORT ==========
+function exportToZip() {
+  if (!originalImage && gifFramesData.length === 0) {
+    alert('Please load an asset first!');
+    return;
+  }
+
+  const tw = parseInt(bitmapWidthInput.value) || 128;
+  const th = parseInt(bitmapHeightInput.value) || 64;
+  const threshold = parseInt(thresholdRange.value);
+  const varName = variableNameInput.value.trim() || "TextAsset";
+  const motionFX = animTypeSelect.value;
+  const useTimeline = timelineFramesData.length > 1 && gifFramesData.length === 0;
+  let totalFrames = 1;
+
+  if (gifFramesData.length > 0) totalFrames = gifFramesData.length;
+  else if (useTimeline) totalFrames = timelineFramesData.length;
+  else if (motionFX !== 'none' && motionFX !== 'typewriter' && motionFX !== 'openClose') totalFrames = 4;
+  else if (motionFX === 'typewriter') totalFrames = Math.min(typewriterText.length, 30);
+  else if (motionFX === 'openClose') totalFrames = 8;
+
+  clearInterval(activeRenderPlaybackInterval);
+
+  let allFrameData = [];
+  let frameNames = [];
+
+  for (let f = 0; f < totalFrames; f++) {
+    let source;
+    if (gifFramesData.length > 0) {
+      source = gifFramesData[f % gifFramesData.length].canvas;
+    } else if (useTimeline) {
+      const fd = timelineFramesData[f % timelineFramesData.length];
+      source = fd.image || fd.canvas || originalImage;
+    } else {
+      source = originalImage;
+    }
+
+    if (motionFX === 'typewriter' && currentMode === 'text') {
+      const text = typewriterText || textInput.value.trim();
+      const frames = getTypewriterFrames(text, totalFrames);
+      const frameText = frames[f % frames.length] || text;
+      renderTypewriterFrame(frameText, text, false);
+    } else if (motionFX === 'openClose') {
+      const values = getOpenCloseFrames(totalFrames);
+      renderOpenCloseFrame(source, values[f % values.length]);
+    } else if (motionFX !== 'none' && gifFramesData.length === 0 && !useTimeline) {
+      renderFrameToTargetResolution(source, { type: motionFX, step: f });
+    } else {
+      renderFrameToTargetResolution(source);
+    }
+
+    const hexData = parseCanvasBytesToHexRowString(tw, th, threshold);
+    const name = (totalFrames === 1) ? varName : `${varName}_frame_${f}`;
+    frameNames.push(name);
+    allFrameData.push({ name, data: hexData });
+  }
+
+  let arrayOutput = '';
+  allFrameData.forEach((fd) => {
+    arrayOutput += `static const uint8_t PROGMEM ${fd.name}[] = {\n  ${fd.data}\n};\n\n`;
+  });
+
+  let animTable = '';
+  if (totalFrames > 1) {
+    animTable = `static const uint8_t* const ${varName}_Anim[] PROGMEM = {\n  ${frameNames.join(", ")}\n};\n`;
+  }
+
+  const fullCode = buildFullSketch(varName, tw, th, totalFrames, motionFX, arrayOutput, animTable);
+
+  if (typeof JSZip === 'undefined') {
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+    script.onload = () => createZipFile(fullCode, arrayOutput, varName, tw, th);
+    document.head.appendChild(script);
+  } else {
+    createZipFile(fullCode, arrayOutput, varName, tw, th);
+  }
+}
+
+function buildFullSketch(varName, tw, th, totalFrames, motionFX, arrayOutput, animTable) {
+  return `/*
+ * PixelForge Studio — generated asset
+ * Size: ${tw}x${th} | Frames: ${totalFrames} | Speed: ${animSpeed}ms
+ * Animation: ${motionFX}
+ * Colors: BG=${userBgColor}, FG=${userFgColor}
+ * Generated: ${new Date().toLocaleString()}
+ */
+
+#include <SPI.h>
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+
+#define SCREEN_WIDTH ${tw}
+#define SCREEN_HEIGHT ${th}
+#define OLED_ADDRESS 0x3C
+#define OLED_RESET -1
+
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+
+${arrayOutput}${animTable}
+
+void setup() {
+  Serial.begin(115200);
+  if(!display.begin(SSD1306_SWITCHCAPVCC, OLED_ADDRESS)) {
+    Serial.println("SSD1306 allocation failed");
+    for(;;);
+  }
+  display.clearDisplay();
+  display.display();
+}
+
+void loop() {
+  display.clearDisplay();
+  ${totalFrames > 1 ? `static int frameIndex = 0;
+  display.drawBitmap(0, 0, ${varName}_Anim[frameIndex], SCREEN_WIDTH, SCREEN_HEIGHT, 1);
+  frameIndex = (frameIndex + 1) % ${totalFrames};` : `display.drawBitmap(0, 0, ${varName}, SCREEN_WIDTH, SCREEN_HEIGHT, 1);`}
+  display.display();
+  delay(${animSpeed});
+}`;
+}
+
+function createZipFile(fullCode, arrayData, varName, tw, th) {
+  const zip = new JSZip();
+  zip.file(`${varName}_full_code.ino`, fullCode);
+  const headerContent = `// ${varName}.h - Bitmap data\n#ifndef ${varName.toUpperCase()}_H\n#define ${varName.toUpperCase()}_H\n\n${arrayData}\n#endif`;
+  zip.file(`${varName}.h`, headerContent);
+  const info = `PixelForge Studio Export
+========================
+Asset: ${varName}
+Size: ${tw}x${th}
+Frames: ${timelineFramesData.length || 1}
+Animation Speed: ${animSpeed}ms
+Colors: BG=${userBgColor}, FG=${userFgColor}
+Generated: ${new Date().toLocaleString()}
+========================
+`;
+  zip.file('README.txt', info);
+
+  zip.generateAsync({ type: 'blob' }).then((content) => {
+    const link = document.createElement('a');
+    link.download = `${varName}_pixelforge_export.zip`;
+    link.href = URL.createObjectURL(content);
+    link.click();
+    URL.revokeObjectURL(link.href);
+    statusBar.textContent = 'ZIP exported successfully.';
+    statusBar.style.display = 'block';
+    setTimeout(() => statusBar.style.display = 'none', 3000);
+  });
+}
+
+// ========== CODE GENERATION ==========
+function generateHardwareOutputCode() {
+  if (isCropMode) disableCropModeUI();
+  if (!originalImage && gifFramesData.length === 0) {
+    codeBox.value = "// Load an asset first!";
+    fullCodeBox.value = "// Load an asset first!";
+    switchTab('code');
+    return;
+  }
+
+  if (originalImage) renderFrameToTargetResolution(originalImage);
+
+  const tw = canvas.width; const th = canvas.height;
+  const threshold = parseInt(thresholdRange.value);
+  const varName = variableNameInput.value.trim() || "TextAsset";
+  const motionFX = animTypeSelect.value;
+  const useTimeline = timelineFramesData.length > 1 && gifFramesData.length === 0;
+  let totalFrames = 1;
+
+  if (gifFramesData.length > 0) totalFrames = gifFramesData.length;
+  else if (useTimeline) totalFrames = timelineFramesData.length;
+  else if (motionFX !== 'none' && motionFX !== 'typewriter' && motionFX !== 'openClose') totalFrames = 4;
+  else if (motionFX === 'typewriter') totalFrames = Math.min(typewriterText.length, 30);
+  else if (motionFX === 'openClose') totalFrames = 8;
+
+  let arrayOutput = '';
+  let generatedArrayTableNames = [];
+  clearInterval(activeRenderPlaybackInterval);
+
+  for (let f = 0; f < totalFrames; f++) {
+    let source;
+    if (gifFramesData.length > 0) {
+      source = gifFramesData[f % gifFramesData.length].canvas;
+    } else if (useTimeline) {
+      const fd = timelineFramesData[f % timelineFramesData.length];
+      source = fd.image || fd.canvas || originalImage;
+    } else {
+      source = originalImage;
+    }
+
+    if (motionFX === 'typewriter' && currentMode === 'text') {
+      const text = typewriterText || textInput.value.trim();
+      const frames = getTypewriterFrames(text, totalFrames);
+      const frameText = frames[f % frames.length] || text;
+      renderTypewriterFrame(frameText, text, false);
+    } else if (motionFX === 'openClose') {
+      const values = getOpenCloseFrames(totalFrames);
+      renderOpenCloseFrame(source, values[f % values.length]);
+    } else if (motionFX !== 'none' && gifFramesData.length === 0 && !useTimeline) {
+      renderFrameToTargetResolution(source, { type: motionFX, step: f });
+    } else {
+      renderFrameToTargetResolution(source);
+    }
+
+    let currentFrameVarName = (totalFrames === 1) ? varName : `${varName}_frame_${f}`;
+    generatedArrayTableNames.push(currentFrameVarName);
+    arrayOutput += `static const uint8_t PROGMEM ${currentFrameVarName}[] = {\n  `;
+    const hexData = parseCanvasBytesToHexRowString(tw, th, threshold);
+    arrayOutput += hexData;
+    arrayOutput += "\n};\n\n";
+  }
+
+  let animTable = '';
+  if (totalFrames > 1) {
+    animTable = `// Animation frame lookup table\n`;
+    animTable += `static const uint8_t* const ${varName}_Anim[] PROGMEM = {\n  `;
+    animTable += generatedArrayTableNames.join(", ") + "\n};\n";
+  }
+
+  const fullCode = buildFullSketch(varName, tw, th, totalFrames, motionFX, arrayOutput, animTable);
+
+  codeBox.value = `// Bitmap data only (${tw}x${th})\n\n${arrayOutput}${animTable}`;
+  fullCodeBox.value = fullCode;
+
+  switchTab('fullCode');
+  if (isAnimActive) executeRenderLoopEngine();
+}
+
+function parseCanvasBytesToHexRowString(w, h, th) {
+  const imgData = ctx.getImageData(0, 0, w, h); const data = imgData.data;
+  let currentByte = 0, bitIndex = 0, collector = [];
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      let idx = (y * w + x) * 4;
+      let luminance = (0.2126 * data[idx] + 0.7152 * data[idx + 1] + 0.0722 * data[idx + 2]);
+      if (luminance >= th) currentByte |= (1 << (7 - bitIndex));
+      bitIndex++;
+      if (bitIndex === 8) {
+        collector.push('0x' + currentByte.toString(16).padStart(2, '0'));
+        currentByte = 0; bitIndex = 0;
+      }
+    }
+    if (bitIndex > 0) {
+      collector.push('0x' + currentByte.toString(16).padStart(2, '0'));
+      currentByte = 0; bitIndex = 0;
+    }
+  }
+  let strOut = "";
+  for (let i = 0; i < collector.length; i++) {
+    strOut += collector[i];
+    if (i < collector.length - 1) { strOut += ", "; if ((i + 1) % 16 === 0) strOut += "\n  "; }
+  }
+  return strOut;
+}
+
+// ========== CROP UI (image + video) ==========
+cropToggleBtn.addEventListener('click', () => {
+  const hasCroppable = (currentMode === 'video' && videoElement) || (currentMode !== 'video' && originalImage && gifFramesData.length === 0);
+  if (!hasCroppable) return;
+  if (isCropMode) disableCropModeUI(); else enableCropModeUI();
+});
+
+function enableCropModeUI() {
+  isCropMode = true;
+  clearInterval(activeRenderPlaybackInterval);
+  cropToggleBtn.textContent = "⏏ Lock crop";
+  cropToggleBtn.classList.add('btn-crop-active');
+  canvas.style.display = 'none';
+  cropBoxPro.style.display = 'block';
+
+  if (currentMode === 'video' && videoElement) {
+    srcVideoDisplay.style.display = 'block';
+    srcImageDisplay.style.display = 'none';
+  } else {
+    srcImageDisplay.style.display = 'block';
+    srcVideoDisplay.style.display = 'none';
+  }
+  updateCropOverlayUI();
+}
+function disableCropModeUI() {
+  isCropMode = false;
+  cropToggleBtn.textContent = "⌗ Precision crop";
+  cropToggleBtn.classList.remove('btn-crop-active');
+  cropBoxPro.style.display = 'none';
+  srcImageDisplay.style.display = 'none';
+  srcVideoDisplay.style.display = 'none';
+  canvas.style.display = 'block';
+
+  if (currentMode === 'video' && videoElement) {
+    extractVideoFrames(); // re-sample using the new crop
+  } else if (isAnimActive) {
+    executeRenderLoopEngine();
+  } else if (originalImage) {
+    renderFrameToTargetResolution(originalImage);
+  }
+}
+function updateCropOverlayUI() {
+  cropBoxPro.style.top = cropMetrics.top + '%'; cropBoxPro.style.left = cropMetrics.left + '%';
+  cropBoxPro.style.width = cropMetrics.width + '%'; cropBoxPro.style.height = cropMetrics.height + '%';
+}
+cropBoxPro.addEventListener('mousedown', (e) => {
+  if (e.target.classList.contains('handle-pro')) { isResizing = true; activeResizeHandle = e.target.getAttribute('data-handle'); }
+  else { isDragging = true; }
+  startX = e.clientX; startY = e.clientY;
+  const rect = workspaceContainer.getBoundingClientRect();
+  startLeft = (cropBoxPro.offsetLeft / rect.width) * 100; startTop = (cropBoxPro.offsetTop / rect.height) * 100;
+  startWidth = (cropBoxPro.offsetWidth / rect.width) * 100; startHeight = (cropBoxPro.offsetHeight / rect.height) * 100;
+  e.preventDefault();
+});
+window.addEventListener('mousemove', (e) => {
+  if (!isDragging && !isResizing) return;
+  const rect = workspaceContainer.getBoundingClientRect();
+  let dx = ((e.clientX - startX) / rect.width) * 100; let dy = ((e.clientY - startY) / rect.height) * 100;
+  if (isDragging) {
+    let l = startLeft + dx, t = startTop + dy;
+    if (l < 0) l = 0; if (t < 0) t = 0;
+    if (l + cropMetrics.width > 100) l = 100 - cropMetrics.width;
+    if (t + cropMetrics.height > 100) t = 100 - cropMetrics.height;
+    cropMetrics.left = l; cropMetrics.top = t;
+  } else if (isResizing) {
+    let h = activeResizeHandle;
+    if (h.includes('r')) cropMetrics.width = Math.max(5, Math.min(startWidth + dx, 100 - cropMetrics.left));
+    if (h.includes('b')) cropMetrics.height = Math.max(5, Math.min(startHeight + dy, 100 - cropMetrics.top));
+    if (h.includes('l')) { let maxW = startLeft + startWidth; let targetL = Math.max(0, Math.min(startLeft + dx, maxW - 5)); cropMetrics.width = maxW - targetL; cropMetrics.left = targetL; }
+    if (h.includes('t')) { let maxH = startTop + startHeight; let targetT = Math.max(0, Math.min(startTop + dy, maxH - 5)); cropMetrics.height = maxH - targetT; cropMetrics.top = targetT; }
+  }
+  updateCropOverlayUI();
+});
+window.addEventListener('mouseup', () => { isDragging = false; isResizing = false; });
+
+// ========== SOURCE TAB SWITCH ==========
+document.querySelectorAll('.source-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    const incomingMode = tab.getAttribute('data-source');
+    if (incomingMode === currentMode) return;
+
+    document.querySelectorAll('.source-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.source-panel').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+
+    if (isCropMode) disableCropModeUI();
+    clearInterval(activeRenderPlaybackInterval);
+
+    snapshotCurrentMode(currentMode);
+    currentMode = incomingMode;
+    document.getElementById(`panel-${currentMode}`).classList.add('active');
+    statusBar.style.display = 'none';
+
+    if (currentMode !== 'video') {
+      videoFrameCountField.style.display = 'none';
+      videoScrubBar.classList.remove('show');
+    }
+
+    if (currentMode === 'text') {
+      originalImage = null;
+      gifFramesData = [];
+      timelineFramesData = [];
+      configPanel.classList.add('show');
+      selectedBadge.textContent = 'Text mode';
+      if (textInput.value.trim()) scheduleRender();
+      else { placeholderText.style.display = 'block'; workspaceContainer.style.display = 'none'; }
+      return;
+    }
+
+    // Non-text modes: try to restore prior content saved for this specific tab
+    originalImage = null;
+    gifFramesData = [];
+    timelineFramesData = [];
+    const restored = restoreMode(currentMode);
+
+    if (currentMode === 'video') {
+      if (videoElement && videoElement.duration && videoFramesExtracted.length) {
+        placeholderText.style.display = 'none';
+        workspaceContainer.style.display = 'block';
+        configPanel.classList.add('show');
+        videoFrameCountField.style.display = 'block';
+        videoScrubBar.classList.add('show');
+        if (isAnimActive) executeRenderLoopEngine();
+        else renderFrameToTargetResolution(originalImage);
+      } else {
+        configPanel.classList.remove('show');
+        placeholderText.style.display = 'block'; workspaceContainer.style.display = 'none';
+      }
+      return;
+    }
+
+    if (restored) {
+      placeholderText.style.display = 'none';
+      workspaceContainer.style.display = 'block';
+      configPanel.classList.add('show');
+      if (isAnimActive) executeRenderLoopEngine();
+      else renderFrameToTargetResolution(originalImage);
+    } else {
+      configPanel.classList.remove('show');
+      placeholderText.style.display = 'block'; workspaceContainer.style.display = 'none';
+    }
+  });
+});
+
+function switchTab(tabName) {
+  document.querySelectorAll('.out-tab').forEach(t => t.classList.remove('active'));
+  previewWrapper.style.display = 'none';
+  codeWrapper.style.display = 'none';
+  fullCodeWrapper.style.display = 'none';
+
+  if (tabName === 'preview') {
+    tabPreview.classList.add('active');
+    previewWrapper.style.display = 'flex';
+  } else if (tabName === 'code') {
+    tabCode.classList.add('active');
+    codeWrapper.style.display = 'flex';
+  } else if (tabName === 'fullCode') {
+    tabFullCode.classList.add('active');
+    fullCodeWrapper.style.display = 'flex';
+  }
+}
+
+// ========== EVENTS ==========
+textInput.addEventListener('input', () => {
+  charCount.textContent = `${textInput.value.length} characters`;
+  if (currentMode === 'text') scheduleRender();
+});
+
+textSizeRange.addEventListener('input', function () {
+  sizeDisplay.textContent = this.value + 'px';
+  if (currentMode === 'text') {
+    if (renderTimeout) clearTimeout(renderTimeout);
+    renderTimeout = setTimeout(() => {
+      if (textInput.value.trim()) renderTextToBitmapDynamic();
+      renderTimeout = null;
+    }, 50);
+  }
+});
+
+fontSelect.addEventListener('change', () => { if (currentMode === 'text') scheduleRender(); });
+
+bitmapWidthInput.addEventListener('input', () => {
+  screenDimsLabel.textContent = `${bitmapWidthInput.value}×${bitmapHeightInput.value}`;
+  if (currentMode === 'text') scheduleRender();
+  else if (originalImage && isAnimActive) executeRenderLoopEngine();
+  else if (originalImage) renderFrameToTargetResolution(originalImage);
+});
+bitmapHeightInput.addEventListener('input', () => {
+  screenDimsLabel.textContent = `${bitmapWidthInput.value}×${bitmapHeightInput.value}`;
+  if (currentMode === 'text') scheduleRender();
+  else if (originalImage && isAnimActive) executeRenderLoopEngine();
+  else if (originalImage) renderFrameToTargetResolution(originalImage);
+});
+
+thresholdRange.addEventListener('input', () => {
+  document.querySelector('#thresholdLabel .size-readout').textContent = thresholdRange.value;
+  if (currentMode === 'text') scheduleRender();
+  else if (originalImage && isAnimActive) executeRenderLoopEngine();
+  else if (originalImage) renderFrameToTargetResolution(originalImage);
+});
+
+animTypeSelect.addEventListener('change', () => {
+  if ((originalImage || gifFramesData.length) && isAnimActive) executeRenderLoopEngine();
+});
+
+pixelToggle.addEventListener('change', () => {
+  if ((originalImage || gifFramesData.length) && isAnimActive) executeRenderLoopEngine();
+  else if (originalImage) renderFrameToTargetResolution(originalImage);
+});
+
+generateCodeBtn.addEventListener('click', generateHardwareOutputCode);
+exportZipBtn.addEventListener('click', exportToZip);
+
+tabPreview.addEventListener('click', () => switchTab('preview'));
+tabCode.addEventListener('click', () => switchTab('code'));
+tabFullCode.addEventListener('click', () => switchTab('fullCode'));
+
+function flashCopied(btn) {
+  const cached = btn.textContent;
+  btn.textContent = '✓ Copied';
+  setTimeout(() => btn.textContent = cached, 1800);
+}
+copyBtn.addEventListener('click', () => { codeBox.select(); document.execCommand('copy'); flashCopied(copyBtn); });
+copyFullCodeBtn.addEventListener('click', () => { fullCodeBox.select(); document.execCommand('copy'); flashCopied(copyFullCodeBtn); });
+copyFullCodeBtn2.addEventListener('click', () => { fullCodeBox.select(); document.execCommand('copy'); flashCopied(copyFullCodeBtn2); });
+
+themeToggle.addEventListener('click', () => {
+  if (document.documentElement.getAttribute('data-theme') === 'light') {
+    document.documentElement.removeAttribute('data-theme');
+  } else {
+    document.documentElement.setAttribute('data-theme', 'light');
+  }
+});
+
+// ========== INIT ==========
+placeholderText.style.display = 'block';
+workspaceContainer.style.display = 'none';
+charCount.textContent = '0 characters';
+sizeDisplay.textContent = textSizeRange.value + 'px';
+videoFrameCountDisplay.textContent = videoFrameCountRange.value;
+screenDimsLabel.textContent = `${bitmapWidthInput.value}×${bitmapHeightInput.value}`;
+document.getElementById('timelineContainer').style.opacity = '0.35';
+document.getElementById('timelineContainer').style.pointerEvents = 'none';
+
+setTimeout(() => {
+  if (currentMode === 'text') {
+    textInput.value = 'Hello World\nনমস্কার বিশ্ব';
+    charCount.textContent = textInput.value.length + ' characters';
+    scheduleRender();
+  }
+}, 400);
+
+</script>
+</body>
+</html>
